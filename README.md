@@ -20,6 +20,44 @@ It also sets the Globe key to "Do Nothing" so macOS does not intercept Parrot's 
 
 **Requires:** macOS 14 or newer on an Apple Silicon Mac (M1 or newer). The first install downloads the on-device speech model and can take a few minutes.
 
+## Install with Codex or Claude Code
+
+Parrot is installed on your Mac. Codex and Claude Code are optional local assistants that can run the official installer for you.
+
+A cloud-only task runs away from your Mac. It cannot install into your `/Applications` folder, approve macOS permissions, or verify your microphone. Use a local session, or a remote-control session explicitly attached to this Mac.
+
+If you already have Codex or Claude Code running locally, paste this prompt:
+
+```text
+Install Parrot on this Mac using the official installer from https://github.com/willmather95/parrot.
+
+1. Confirm that this Mac is running macOS 14 or newer on Apple Silicon.
+2. Show me this exact command and wait for my approval:
+   curl -fsSL https://github.com/willmather95/parrot/releases/latest/download/install.sh | bash
+3. Run only that official installer as my normal user. Do not build from source, use a different download, or bypass permission prompts.
+4. If macOS asks for Accessibility or Microphone access, stop and tell me exactly which app to enable. Do not claim success until the permission step is complete.
+5. After installation, run:
+   /Applications/Parrot.app/Contents/MacOS/parrot doctor --live-audio --model-ready
+6. Report each check as passed or failed, plus any remaining action I need to take.
+```
+
+To start the local assistants from Terminal, use their official setup first if needed:
+
+```sh
+# Codex CLI
+npm install -g @openai/codex
+codex --login
+codex
+
+# Claude Code
+npm install -g @anthropic-ai/claude-code
+claude
+```
+
+These CLI commands require a currently supported Node.js and npm installation. If you do not already have them, use the linked setup pages instead. You do not need an AI assistant to install Parrot itself.
+
+You can also use the [Codex app](https://developers.openai.com/codex/app), [Codex CLI](https://developers.openai.com/codex/cli), or [Claude Code](https://code.claude.com/docs/en/getting-started) directly. The agent can guide the install, but you must review and approve the installer command and complete the macOS permission prompts yourself.
+
 ## Use it
 
 **Best workflow, especially in Codex:** Use Parrot like a voice clipboard. Press once and let go, speak, press once again and let go, then paste the transcript.
