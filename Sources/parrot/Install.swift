@@ -139,7 +139,9 @@ struct Install: ParsableCommand {
             ))
             throw ExitCode(1)
         }
-        if let failure = waitForAgentReadiness(startingAt: logOffset, timeout: 60) {
+        // A cold launch performs a real local inference before readiness so
+        // the user's first dictation does not pay Core ML initialization cost.
+        if let failure = waitForAgentReadiness(startingAt: logOffset, timeout: 120) {
             let rollbackFailure = rollbackAgent(
                 previousPlist: previousPlist,
                 wasLoaded: previousWasLoaded

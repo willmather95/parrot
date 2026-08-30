@@ -99,6 +99,36 @@ private final class FakeDictationDeliveryGuard: DictationDeliveryGuard {
     #expect(ModelRegistry.find(recommended?.id ?? "")?.id == recommended?.id)
 }
 
+@Test func parakeetInferenceWarmupUsesPrivateDeterministicAudio() {
+    let first = ParakeetTranscriber.inferenceWarmupSamples()
+    let second = ParakeetTranscriber.inferenceWarmupSamples()
+
+    #expect(first.count == Int(AudioCapture.targetSampleRate))
+    #expect(first == second)
+    #expect(computeRMS(first) > 0)
+    #expect(computeRMS(first) < 0.01)
+    #expect(first.allSatisfy { $0.isFinite })
+
+    let defensiveFixture = ParakeetTranscriber.inferenceWarmupSamples(sampleRate: 0)
+    #expect(defensiveFixture.count == 1)
+    #expect(defensiveFixture.allSatisfy { $0.isFinite })
+}
+
+@Test func parakeetTemporaryInferenceFilesPreserveLiveOwners() {
+    #expect(ParakeetTranscriber.temporaryInferenceOwnerPID(
+        from: "parrot-audio-1234-00000000-0000-0000-0000-000000000000"
+    ) == 1234)
+    #expect(ParakeetTranscriber.temporaryInferenceOwnerPID(
+        from: "parrot-warmup-5678-00000000-0000-0000-0000-000000000000"
+    ) == 5678)
+    #expect(ParakeetTranscriber.temporaryInferenceOwnerPID(
+        from: "parrot-audio-invalid-00000000-0000-0000-0000-000000000000"
+    ) == nil)
+    #expect(ParakeetTranscriber.temporaryInferenceOwnerPID(
+        from: "parrot-debug-1234-00000000-0000-0000-0000-000000000000"
+    ) == nil)
+}
+
 @Test func loginServiceLaunchesTheAppThroughLaunchServices() {
     let binary = "/Applications/Parrot.app/Contents/MacOS/parrot"
     #expect(loginServiceProgramArguments(binary: binary) == [binary, "login-launcher"])

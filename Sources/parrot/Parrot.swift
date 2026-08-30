@@ -9,7 +9,7 @@ struct Parrot: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "parrot",
         abstract: "Minimal macOS dictation daemon. Press Control + Fn/Globe to record; press again to stop.",
-        version: "0.1.3",
+        version: "0.1.4",
         subcommands: [Run.self, Setup.self, Doctor.self, Models.self, Install.self, LoginLauncher.self],
         defaultSubcommand: Run.self
     )
@@ -222,16 +222,23 @@ struct Run: ParsableCommand {
                 }
                 return
             }
+            let queuedAt = ProcessInfo.processInfo.systemUptime
             transcriptionQueue.enqueue {
-                let started = Date()
+                let started = ProcessInfo.processInfo.systemUptime
+                let queueDelay = max(0, started - queuedAt)
                 do {
                     let text = try await withAsyncTimeout(seconds: 180) {
                         try await transcriber.transcribe(samples)
                     }
                     guard !text.isEmpty else { throw TranscriberError.emptyResult }
-                    let elapsed = Date().timeIntervalSince(started)
+                    let elapsed = ProcessInfo.processInfo.systemUptime - started
                     FileHandle.standardError.write(Data(
-                        String(format: "→ %.2fs · %d chars\n", elapsed, text.count).utf8
+                        String(
+                            format: "→ inference %.2fs · queue %.2fs · %d chars\n",
+                            elapsed,
+                            queueDelay,
+                            text.count
+                        ).utf8
                     ))
                     // Give the main event tap one short turn to record any
                     // already queued click or keystroke before global text is
@@ -442,7 +449,7 @@ struct Doctor: ParsableCommand {
     @Flag(name: .long, help: "Record briefly and verify that Core Audio returns real microphone frames.")
     var liveAudio: Bool = false
 
-    @Flag(name: .long, help: "Load the selected model and verify it is ready for transcription.")
+    @Flag(name: .long, help: "Load and inference-warm the selected model for transcription.")
     var modelReady: Bool = false
 
     func run() throws {
@@ -522,8 +529,11 @@ struct Models: ParsableCommand {
             try ensureModelDiskSpace(for: model)
             try waitForAsyncOperation(timeout: 600) {
                 try await transcriber.warmUp()
+                let started = ProcessInfo.processInfo.systemUptime
                 let text = try await transcriber.transcribeFile(fixture)
                 guard !text.isEmpty else { throw ParakeetTranscriberError.emptyResult }
+                let elapsed = ProcessInfo.processInfo.systemUptime - started
+                print(String(format: "  post-warm inference %.2fs", elapsed))
             }
             print("✓ local Parakeet transcription smoke test passed")
         }

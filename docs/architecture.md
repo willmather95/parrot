@@ -40,7 +40,7 @@ Temporary WAVs are used only for Parakeet inference, model smoke tests, or an ex
 
 ## Transcription and ordering
 
-The built-in model registry is source-backed. Parakeet TDT 0.6B v2 is the recommended English model; WhisperKit models remain selectable. Model preparation checks available disk and uses a bounded timeout.
+The built-in model registry is source-backed. Parakeet TDT 0.6B v2 is the recommended English model; WhisperKit models remain selectable. Model preparation checks available disk and uses a bounded timeout. Parakeet startup loads the selected Core ML models, then runs one private inference over deterministic low-amplitude synthetic audio before reporting ready. The discarded warmup result cannot affect later dictation because every inference receives a fresh decoder state. Startup logs report warmup duration, while completed dictations report inference and queue time separately.
 
 Transcriptions are serialized in stop order and each live inference is bounded to 180 seconds so one stalled model call cannot block every later result. Each interaction carries a generation number so an older result cannot clear a newer recording, transcribing, or error state. Empty and failed transcriptions surface an error and audible alert; an older failure announces itself without overwriting newer UI state.
 

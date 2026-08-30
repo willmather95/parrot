@@ -14,6 +14,8 @@ curl -fsSL https://github.com/willmather95/parrot/releases/latest/download/insta
 
 The installer walks you through the two macOS permission prompts, downloads the local speech model, verifies your microphone, and starts Parrot automatically whenever you log in.
 
+Parrot runs one private local inference before it reports ready. A cold launch can therefore take longer, but the one-time Core ML initialization cost is paid before your first dictation instead of after you stop speaking. The warmup uses generated synthetic audio, plays nothing, and retains no transcript.
+
 At login, a crash-aware supervisor opens Parrot as the signed app through macOS Launch Services. That keeps its menu-bar bird and bottom-of-screen listening pill attached to the active desktop instead of stranding them on the desktop that happened to exist during startup. A deliberate menu-bar Quit stays quit; a crash or fatal hotkey failure is restarted automatically.
 
 It also sets the Globe key to "Do Nothing" so macOS does not intercept Parrot's shortcut. You can change that later in System Settings > Keyboard.
