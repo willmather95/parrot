@@ -56,7 +56,7 @@ The local model selection is stored at `~/Library/Application Support/parrot/set
 
 `parrot install --launch-at-login` requires and verifies the stable app bundle, writes the LaunchAgent atomically, bootstraps it, and requires both launchd's running state and a fresh ready log line. Failures attempt to restore the prior plist and registered state. Uninstall treats launchd as authoritative even if the plist is missing.
 
-LaunchAgent output lives in `~/Library/Logs/Parrot`, with a `0700` directory and `0600` regular files. Public installation verifies the published release checksum and bundle identity. Updating a running installation restarts the registered service and requires its fresh-ready verifier before success; a failed update restores the prior app and service.
+LaunchAgent output lives in `~/Library/Logs/Parrot`, with a `0700` directory and `0600` regular files. The canonical high-resolution app icon lives at `AppBundle/ParrotAppIcon.png`; the release pipeline generates its complete `.icns` family and fails if the signed bundle or packaged archive omits it. Public installation verifies the published release checksum, bundle identity, and declared app icon. Updating a running installation restarts the registered service and requires its fresh-ready verifier before success; a failed update restores the prior app and service.
 
 ## Verification
 

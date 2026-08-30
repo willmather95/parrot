@@ -34,7 +34,7 @@ if [ "$ARCH" != "arm64" ]; then
     exit 1
 fi
 
-for cmd in codesign curl ditto shasum tar; do
+for cmd in codesign curl ditto plutil shasum tar; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         red "missing dependency: $cmd"
         exit 1
@@ -86,7 +86,10 @@ if printf '%s\n' "$ARCHIVE_LIST" | grep -E '(^/|(^|/)\.\.(/|$))' >/dev/null; the
     red "release archive contains an unsafe path"
     exit 1
 fi
-for required_path in parrot Parrot.app/Contents/MacOS/parrot; do
+for required_path in \
+    parrot \
+    Parrot.app/Contents/MacOS/parrot \
+    Parrot.app/Contents/Resources/Parrot.icns; do
     if ! printf '%s\n' "$ARCHIVE_LIST" | grep -Fx "$required_path" >/dev/null; then
         red "release archive is missing ${required_path}"
         exit 1
@@ -98,8 +101,15 @@ tar -xzf "$TMP/${ASSET}" -C "$TMP"
 
 APP_SOURCE="$TMP/Parrot.app"
 APP_EXECUTABLE="$APP_SOURCE/Contents/MacOS/parrot"
+APP_ICON="$APP_SOURCE/Contents/Resources/Parrot.icns"
 if [ ! -x "$APP_EXECUTABLE" ]; then
     red "archive did not contain an executable Parrot.app"
+    exit 1
+fi
+
+BUNDLE_ICON=$(plutil -extract CFBundleIconFile raw "$APP_SOURCE/Contents/Info.plist" 2>/dev/null || true)
+if [ "$BUNDLE_ICON" != "Parrot.icns" ] || [ ! -s "$APP_ICON" ]; then
+    red "archive did not contain the expected Parrot app icon"
     exit 1
 fi
 

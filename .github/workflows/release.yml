@@ -58,10 +58,15 @@ jobs:
 
       - name: build signed app bundle
         run: |
-          mkdir -p dist/Parrot.app/Contents/MacOS
+          mkdir -p dist/Parrot.app/Contents/MacOS dist/Parrot.app/Contents/Resources
           cp AppBundle/Info.plist dist/Parrot.app/Contents/Info.plist
           cp dist/parrot dist/Parrot.app/Contents/MacOS/parrot
+          scripts/build-app-icon.sh \
+            AppBundle/ParrotAppIcon.png \
+            dist/Parrot.app/Contents/Resources/Parrot.icns
           chmod +x dist/Parrot.app/Contents/MacOS/parrot
+          test "$(plutil -extract CFBundleIconFile raw dist/Parrot.app/Contents/Info.plist)" = "Parrot.icns"
+          test -s dist/Parrot.app/Contents/Resources/Parrot.icns
           codesign --force --deep --sign - \
             --identifier com.digimata.parrot \
             --requirements '=designated => identifier "com.digimata.parrot"' \
@@ -73,6 +78,7 @@ jobs:
         run: |
           cd dist
           tar -czf parrot-macos-arm64.tar.gz parrot Parrot.app
+          tar -tzf parrot-macos-arm64.tar.gz | grep -Fx 'Parrot.app/Contents/Resources/Parrot.icns'
           shasum -a 256 parrot-macos-arm64.tar.gz > parrot-macos-arm64.tar.gz.sha256
           shasum -a 256 install.sh > install.sh.sha256
           ls -lh
