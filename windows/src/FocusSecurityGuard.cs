@@ -67,7 +67,7 @@ namespace Parrot.Windows
                     _activeCheck = null;
                 }
 
-                check = Task.Factory.StartNew(
+                check = Task.Factory.StartNew<FocusCheckResult>(
                     CheckCore,
                     CancellationToken.None,
                     TaskCreationOptions.DenyChildAttach,
