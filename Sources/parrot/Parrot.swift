@@ -9,7 +9,7 @@ struct Parrot: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "parrot",
         abstract: "Minimal macOS dictation daemon. Press Control + Fn/Globe to record; press again to stop.",
-        version: "0.1.4",
+        version: "0.1.5",
         subcommands: [Run.self, Setup.self, Doctor.self, Models.self, Install.self, LoginLauncher.self],
         defaultSubcommand: Run.self
     )
@@ -531,7 +531,9 @@ struct Models: ParsableCommand {
                 try await transcriber.warmUp()
                 let started = ProcessInfo.processInfo.systemUptime
                 let text = try await transcriber.transcribeFile(fixture)
-                guard !text.isEmpty else { throw ParakeetTranscriberError.emptyResult }
+                guard smokeTranscriptMatches(text) else {
+                    throw SmokeVerificationError.incorrectTranscript
+                }
                 let elapsed = ProcessInfo.processInfo.systemUptime - started
                 print(String(format: "  post-warm inference %.2fs", elapsed))
             }

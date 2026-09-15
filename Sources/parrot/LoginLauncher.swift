@@ -5,7 +5,133 @@ import Foundation
 
 enum ParrotLoginService {
     static let bundleIdentifier = "com.digimata.parrot"
-    static let applicationPath = "/Applications/Parrot.app"
+
+    static let systemApplicationPath = "/Applications/Parrot.app"
+
+    static func userApplicationPath(homeDirectory: URL) -> String {
+        homeDirectory
+            .appendingPathComponent("Applications/Parrot.app", isDirectory: true)
+            .standardizedFileURL.path
+    }
+
+    static func supportedApplicationPaths(homeDirectory: URL) -> [String] {
+        [
+            systemApplicationPath,
+            userApplicationPath(homeDirectory: homeDirectory),
+        ]
+    }
+
+    enum ApplicationPathError: Error, Equatable, LocalizedError {
+        case unsupportedBundle(String, supported: [String])
+        case missingExecutable(String)
+        case conflictingInstallation(String, selected: String)
+        case conflictingLoginService(String, selected: String)
+        case invalidLoginService(String)
+
+        var errorDescription: String? {
+            switch self {
+            case let .unsupportedBundle(path, supported):
+                return "Parrot must run from a supported app bundle (found \(path); supported: \(supported.joined(separator: ", "))). Re-run the installer."
+            case let .missingExecutable(path):
+                return "Parrot.app is missing its executable at \(path). Re-run the installer."
+            case let .conflictingInstallation(path, selected):
+                return "another Parrot.app exists at \(path). Remove that installation before using \(selected); Parrot does not migrate between install locations automatically."
+            case let .conflictingLoginService(path, selected):
+                return "the existing Parrot login service targets \(path), not \(selected). Uninstall that login service with its current app before changing install locations."
+            case let .invalidLoginService(path):
+                return "the existing Parrot login service plist is unreadable or invalid at \(path). Remove or repair it before reinstalling Parrot."
+            }
+        }
+    }
+
+    static func resolveApplicationPath(
+        bundleURL: URL,
+        homeDirectory: URL,
+        isExecutableFile: (String) -> Bool,
+        installedApplicationPaths: [String],
+        launchAgentProgram: String?
+    ) throws -> String {
+        let supported = supportedApplicationPaths(homeDirectory: homeDirectory)
+            .map { URL(fileURLWithPath: $0, isDirectory: true).standardizedFileURL.path }
+        let selected = bundleURL.standardizedFileURL.path
+
+        guard supported.contains(selected) else {
+            throw ApplicationPathError.unsupportedBundle(selected, supported: supported)
+        }
+
+        let executable = "\(selected)/Contents/MacOS/parrot"
+        guard isExecutableFile(executable) else {
+            throw ApplicationPathError.missingExecutable(executable)
+        }
+
+        if let other = installedApplicationPaths
+            .map({ URL(fileURLWithPath: $0, isDirectory: true).standardizedFileURL.path })
+            .first(where: { $0 != selected })
+        {
+            throw ApplicationPathError.conflictingInstallation(other, selected: selected)
+        }
+
+        if let launchAgentProgram {
+            let normalizedProgram = URL(fileURLWithPath: launchAgentProgram).standardizedFileURL.path
+            guard normalizedProgram == executable else {
+                throw ApplicationPathError.conflictingLoginService(
+                    normalizedProgram,
+                    selected: selected
+                )
+            }
+        }
+
+        return selected
+    }
+
+    static func resolveApplicationPath(
+        bundleURL: URL = Bundle.main.bundleURL,
+        fileManager: FileManager = .default
+    ) throws -> String {
+        let home = fileManager.homeDirectoryForCurrentUser
+        let supported = supportedApplicationPaths(homeDirectory: home)
+        let installed = supported.filter { fileManager.fileExists(atPath: $0) }
+        return try resolveApplicationPath(
+            bundleURL: bundleURL,
+            homeDirectory: home,
+            isExecutableFile: fileManager.isExecutableFile(atPath:),
+            installedApplicationPaths: installed,
+            launchAgentProgram: try launchAgentProgram(
+                homeDirectory: home,
+                fileManager: fileManager
+            )
+        )
+    }
+
+    private static func launchAgentProgram(
+        homeDirectory: URL,
+        fileManager: FileManager
+    ) throws -> String? {
+        let plistURL = homeDirectory
+            .appendingPathComponent("Library/LaunchAgents", isDirectory: true)
+            .appendingPathComponent("\(bundleIdentifier).plist")
+        guard fileManager.fileExists(atPath: plistURL.path) else { return nil }
+
+        do {
+            let data = try Data(contentsOf: plistURL)
+            guard let plist = try PropertyListSerialization.propertyList(
+                from: data,
+                options: [],
+                format: nil
+            ) as? [String: Any],
+                let arguments = plist["ProgramArguments"] as? [String],
+                let program = arguments.first,
+                !program.isEmpty
+            else {
+                throw ApplicationPathError.invalidLoginService(plistURL.path)
+            }
+            return program
+        } catch let error as ApplicationPathError {
+            throw error
+        } catch {
+            throw ApplicationPathError.invalidLoginService(plistURL.path)
+        }
+    }
 
     private static var markerDirectoryURL: URL {
         FileManager.default.homeDirectoryForCurrentUser
@@ -168,6 +294,16 @@ struct LoginLauncher: ParsableCommand {
         try ParrotLoginService.prepareMarkerDirectory()
         try ParrotLoginService.clearQuitMarker(for: token)
 
+        let application: String
+        do {
+            application = try ParrotLoginService.resolveApplicationPath()
+        } catch {
+            FileHandle.standardError.write(Data(
+                "login launcher: \(error.localizedDescription)\n".utf8
+            ))
+            throw ExitCode.failure
+        }
+
         // A previous supervisor can be killed without taking down the app that
         // Launch Services owns. Reconcile that orphan before assigning a fresh
         // quit token so one supervisor always owns one GUI app lifetime.
@@ -181,7 +317,7 @@ struct LoginLauncher: ParsableCommand {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
         process.arguments = loginApplicationProgramArguments(
-            application: ParrotLoginService.applicationPath,
+            application: application,
             outputLogPath: logs.appendingPathComponent("parrot.out.log").path,
             errorLogPath: logs.appendingPathComponent("parrot.err.log").path,
             quitToken: token

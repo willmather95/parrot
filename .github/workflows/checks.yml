@@ -1,0 +1,52 @@
+name: checks
+
+on:
+  pull_request:
+  push:
+    branches: [master, 'codex/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Test pinned Swift dependencies
+        run: swift test --disable-automatic-resolution
+      - name: Installer syntax and path checks
+        run: |
+          bash -n scripts/install.sh
+          bash scripts/tests/test-install-paths.sh
+          git diff --exit-code -- Package.resolved
+
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile, test, and package Windows preview
+        shell: powershell
+        run: ./windows/Package.ps1
+      - name: Verify package and user installation
+        shell: powershell
+        run: ./windows/Test-Package.ps1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: parrot-windows-x64-preview
+          path: |
+            windows/build/parrot-windows-x64-preview.zip
+            windows/build/parrot-windows-x64-preview.zip.sha256
+          if-no-files-found: error
+          retention-days: 14

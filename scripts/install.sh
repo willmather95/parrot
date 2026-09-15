@@ -3,9 +3,10 @@
 #   curl -fsSL https://github.com/willmather95/parrot/releases/latest/download/install.sh | bash
 #
 # Fetches the latest arm64 macOS app from GitHub Releases, verifies its
-# published SHA-256 checksum, installs the stable signed app identity in
-# /Applications. When /usr/local/bin already exists and is writable, it also
-# adds an optional CLI shortcut there without requesting administrator access.
+# published SHA-256 checksum, and installs the stable signed app identity in
+# /Applications. Pass --user to install in ~/Applications with a CLI shortcut
+# in ~/.local/bin, without administrator access. When /usr/local/bin already
+# exists and is writable, the default install also adds an optional shortcut.
 #
 # Apple Silicon only. Parrot's local inference engines require an M-series Mac.
 
@@ -13,13 +14,105 @@ set -euo pipefail
 
 REPO="willmather95/parrot"
 BIN_NAME="parrot"
-INSTALL_DIR="/usr/local/bin"
 ASSET="parrot-macos-arm64.tar.gz"
 CURL_FLAGS=(--fail --silent --show-error --location --retry 3 --retry-delay 1 --retry-all-errors)
 
 red()    { printf "\033[31m%s\033[0m\n" "$*" >&2; }
 green()  { printf "\033[32m%s\033[0m\n" "$*"; }
 dim()    { printf "\033[2m%s\033[0m\n" "$*"; }
+
+usage() {
+    cat <<'EOF'
+Usage: install.sh [--user]
+
+  (default)  Install Parrot.app in /Applications.
+  --user     Install Parrot.app in ~/Applications and the CLI in ~/.local/bin.
+EOF
+}
+
+INSTALL_MODE="system"
+case "${1:-}" in
+    "") ;;
+    --user) INSTALL_MODE="user"; shift ;;
+    --help|-h) usage; exit 0 ;;
+    *) red "unknown option: $1"; usage >&2; exit 64 ;;
+esac
+if [ "$#" -ne 0 ]; then
+    red "unexpected argument: $1"
+    usage >&2
+    exit 64
+fi
+
+SYSTEM_APP_DIR="/Applications/Parrot.app"
+USER_APP_DIR="${HOME}/Applications/Parrot.app"
+if [ "$INSTALL_MODE" = "user" ]; then
+    APP_DIR="$USER_APP_DIR"
+    OTHER_APP_DIR="$SYSTEM_APP_DIR"
+    INSTALL_DIR="${HOME}/.local/bin"
+    APP_PARENT="${HOME}/Applications"
+else
+    APP_DIR="$SYSTEM_APP_DIR"
+    OTHER_APP_DIR="$USER_APP_DIR"
+    INSTALL_DIR="/usr/local/bin"
+    APP_PARENT="/Applications"
+fi
+
+APP_EXECUTABLE_PATH="$APP_DIR/Contents/MacOS/parrot"
+AGENT_TARGET="gui/$(id -u)/com.digimata.parrot"
+AGENT_PLIST="${HOME}/Library/LaunchAgents/com.digimata.parrot.plist"
+
+conflict_instructions() {
+    local existing_app="$1"
+    red "Parrot will not move between install locations automatically."
+    red "First stop the existing login service with:"
+    red "  ${existing_app}/Contents/MacOS/parrot install --uninstall"
+    red "Then remove ${existing_app} and run the installer again."
+}
+
+check_install_location_conflicts() {
+    if [ -e "$OTHER_APP_DIR" ]; then
+        red "another Parrot.app already exists at ${OTHER_APP_DIR}"
+        conflict_instructions "$OTHER_APP_DIR"
+        return 1
+    fi
+
+    local existing_program=""
+    if [ -e "$AGENT_PLIST" ]; then
+        if ! existing_program=$(plutil -extract ProgramArguments.0 raw "$AGENT_PLIST" 2>/dev/null); then
+            red "the existing Parrot login service plist is unreadable or invalid: ${AGENT_PLIST}"
+            red "Remove or repair it before reinstalling Parrot."
+            return 1
+        fi
+        if [ "$existing_program" != "$APP_EXECUTABLE_PATH" ]; then
+            red "the existing Parrot login service targets ${existing_program}"
+            red "the selected install target is ${APP_EXECUTABLE_PATH}"
+            conflict_instructions "${existing_program%/Contents/MacOS/parrot}"
+            return 1
+        fi
+    elif launchctl print "$AGENT_TARGET" >/dev/null 2>&1; then
+        red "a Parrot login service is registered, but ${AGENT_PLIST} is missing"
+        red "Uninstall the existing login service before reinstalling Parrot."
+        return 1
+    fi
+}
+
+validate_release_tag() {
+    if [[ ! "$TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+        red "latest release has an unexpected tag: ${TAG}"
+        return 1
+    fi
+    TAG_MAJOR=$((10#${BASH_REMATCH[1]}))
+    TAG_MINOR=$((10#${BASH_REMATCH[2]}))
+    TAG_PATCH=$((10#${BASH_REMATCH[3]}))
+    if [ "$INSTALL_MODE" = "user" ] \
+        && [ "$TAG_MAJOR" -eq 0 ] \
+        && { [ "$TAG_MINOR" -lt 1 ] \
+            || { [ "$TAG_MINOR" -eq 1 ] && [ "$TAG_PATCH" -lt 5 ]; }; }; then
+        red "Parrot ${TAG} does not support installation in ~/Applications."
+        red "Per-user installation requires Parrot v0.1.5 or later; no files were changed."
+        return 1
+    fi
+}
 
 # 1. sanity
 if [ "$(uname -s)" != "Darwin" ]; then
@@ -41,6 +134,10 @@ for cmd in codesign curl ditto plutil shasum tar; do
     fi
 done
 
+# Refuse migration before downloading or replacing anything. The app bundle
+# path is part of Parrot's stable macOS permission and login-service identity.
+check_install_location_conflicts
+
 # 2. resolve latest release
 dim "→ resolving latest release..."
 TAG=$(curl "${CURL_FLAGS[@]}" "https://api.github.com/repos/${REPO}/releases/latest" \
@@ -52,6 +149,7 @@ if [ -z "${TAG:-}" ]; then
     red "couldn't determine latest release tag"
     exit 1
 fi
+validate_release_tag
 dim "  ${TAG}"
 
 URL="https://github.com/${REPO}/releases/download/${TAG}/${ASSET}"
@@ -125,16 +223,16 @@ fi
 xattr -dr com.apple.quarantine "$APP_SOURCE" 2>/dev/null || true
 
 # 5. install the app
-APP_DIR="/Applications/Parrot.app"
-APP_STAGE="/Applications/.Parrot.app.install.$$"
-APP_BACKUP="/Applications/.Parrot.app.backup.$$"
-AGENT_TARGET="gui/$(id -u)/com.digimata.parrot"
+APP_STAGE="${APP_PARENT}/.Parrot.app.install.$$"
+APP_BACKUP="${APP_PARENT}/.Parrot.app.backup.$$"
 AGENT_WAS_REGISTERED=false
 if launchctl print "$AGENT_TARGET" >/dev/null 2>&1; then
     AGENT_WAS_REGISTERED=true
 fi
 APP_SUDO=""
-if [ ! -w "/Applications" ]; then
+if [ "$INSTALL_MODE" = "user" ]; then
+    mkdir -p "$APP_PARENT" "$INSTALL_DIR"
+elif [ ! -w "$APP_PARENT" ]; then
     APP_SUDO="sudo"
 fi
 
@@ -170,7 +268,7 @@ if ! $APP_SUDO codesign --verify --deep --strict --verbose=2 "$APP_DIR"; then
 fi
 
 CLI_LINKED=false
-if [ -d "$INSTALL_DIR" ] && [ -w "$INSTALL_DIR" ]; then
+if [ "$INSTALL_MODE" = "user" ] || { [ -d "$INSTALL_DIR" ] && [ -w "$INSTALL_DIR" ]; }; then
     dim "→ adding optional CLI shortcut at ${INSTALL_DIR}/${BIN_NAME}..."
     ln -sf "$APP_DIR/Contents/MacOS/parrot" "${INSTALL_DIR}/${BIN_NAME}"
     CLI_LINKED=true

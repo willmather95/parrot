@@ -4,6 +4,24 @@ Fast, private voice-to-text for Apple Silicon Macs. Press one shortcut, speak na
 
 Audio and transcription stay on your Mac. There is no account, subscription, or cloud API.
 
+## Upgrade candidate and Windows preview
+
+The working source now includes a **Windows 11 x64 preview** and opt-in macOS
+per-user installation. These changes are not yet a published release.
+See [Windows setup and limitations](windows/README.md) and the
+[release checklist](docs/release-checklist.md).
+
+The Windows preview runs from a user-owned folder and copies dictated text for
+manual paste. It uses Windows' installed offline speech engine; it does not yet
+use the Mac's Parakeet model or claim equivalent transcription quality.
+
+The macOS candidate's installer accepts `--user` to install under
+`~/Applications/Parrot.app`, with a user-local CLI link. This requires a release
+containing the matching new app; the current public v0.1.4 installer does not
+support this mode. No implicit migration between system and user locations is
+performed. Microphone, Accessibility, and company application policies still
+apply.
+
 ## Install
 
 Open Terminal, paste this entire line, and press Return:
@@ -83,6 +101,10 @@ Run one check that verifies permissions, the real microphone path, and the selec
 ```sh
 parrot doctor --live-audio --model-ready
 ```
+
+If `parrot` is not on your PATH, use the full executable path:
+`/Applications/Parrot.app/Contents/MacOS/parrot` for the system install, or
+`"$HOME/Applications/Parrot.app/Contents/MacOS/parrot"` for a per-user install.
 
 If macOS permissions were changed after installation, run:
 

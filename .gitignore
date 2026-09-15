@@ -6,3 +6,7 @@
 
 # kdb auto-rendered task index (regenerate with `kdb render`)
 .tasks/
+
+# Local packages and verification output
+dist/
+windows/build/

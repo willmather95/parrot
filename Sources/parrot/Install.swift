@@ -38,7 +38,6 @@ struct Install: ParsableCommand {
     // MARK: -
 
     private static let label = ParrotLoginService.bundleIdentifier
-    private static let appPath = ParrotLoginService.applicationPath
 
     private var logDirectoryURL: URL {
         FileManager.default.homeDirectoryForCurrentUser
@@ -277,14 +276,14 @@ struct Install: ParsableCommand {
     }
 
     private func resolveApplicationPath() throws -> String {
-        let executable = "\(Self.appPath)/Contents/MacOS/parrot"
-        guard FileManager.default.isExecutableFile(atPath: executable) else {
+        do {
+            return try ParrotLoginService.resolveApplicationPath()
+        } catch {
             FileHandle.standardError.write(Data(
-                "Parrot.app is required for reliable login permissions. Re-run the installer first.\n".utf8
+                "\(error.localizedDescription)\n".utf8
             ))
             throw ExitCode(1)
         }
-        return Self.appPath
     }
 
     private func uid() -> uid_t { getuid() }
