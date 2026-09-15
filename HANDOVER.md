@@ -42,7 +42,16 @@ No installed app, LaunchAgent, permission identity, or model payload was replace
 - Package.resolved unchanged.
 - Independent Fresh Eyes/Boris reviews found issues; fixes and targeted review
   are recorded in the current task. Final targeted reviews found no remaining
-  static P0/P1 findings. No Windows compile/runtime success is claimed.
+  static P0/P1 findings.
+- Windows and macOS CI passed on 019bd5c337e9b10970e75dae4aff4c4692ca91c5:
+  https://github.com/willmather95/parrot/actions/runs/35037410476.
+- Windows compiled with the in-box Framework compiler after making the focus
+  task's generic return type explicit. Nine deterministic tests passed; package,
+  user-folder installation, update, forced rollback, and corruption-rejection
+  checks passed. These ran under runneradmin, not a managed standard account.
+- Downloaded artifact 10423223959 and verified its inner ZIP and payload hashes,
+  plus the embedded asInvoker/uiAccess=false manifest. ZIP SHA-256:
+  654a1f27faa25c49d1263561b2565e7da784fc3ab7419db9a7f36aa5e2a8134a.
 
 Detailed command logs are in the current task's work/ directory. Local model
 smoke generated synthetic speech only. No central memory or shared operational
@@ -55,9 +64,8 @@ system was updated.
    Git identity is Bill Mather / will.mather@mathermediasolutions.com. The approved
    branch is codex/parrot-windows-preview; a public release or installed Mac
    replacement remains outside this approval.
-3. Run the Windows checks job after the source is pushed. Fix compilation/test
-   failures before distributing the preview. CI uses a disposable runner and
-   does not prove standard-user policy acceptance.
+3. Branch pushed and both CI jobs passed. The verified Windows preview artifact
+   is available from the run above; CI does not prove work-device acceptance.
 4. Test real microphone, hotkey, clipboard, secure focus, cancel, repeated use,
    DPI/Narrator, sleep/resume, and install/update on a standard Windows account.
 5. A Windows-compatible modern local model/runtime requires dependency/download
@@ -71,6 +79,7 @@ system was updated.
 
 ## Next action
 
-Commit/push the approved file set and run Windows CI to produce a reviewable
-downloadable preview. Do not silently upgrade the daily-running Mac app or
-claim Windows/Mac recognition-quality parity.
+Have the user extract the verified Windows preview and open Parrot.exe on their
+work laptop. Run one harmless dictation and manual Ctrl+V test. Keep exact error
+text if recognizer or company policy blocks it. Do not silently upgrade the
+daily-running Mac app or claim Windows/Mac recognition-quality parity.
