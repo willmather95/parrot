@@ -62,3 +62,35 @@ overlapping model operations. Process isolation is a possible later improvement.
 Exact artifact URLs, hashes, versions, and license notices are recorded in the
 Windows dependency manifest and bundled notices. The running Mac installation
 is outside the scope of this Windows backend change.
+
+## Verified candidate: September 16, 2026
+
+Tested executable source: `9176eed5de4924ef7173c08150010dfcc882d954`. Both jobs passed in
+[checks run 35105457141](https://github.com/willmather95/parrot/actions/runs/35105457141).
+The Windows job passed C# 5 compilation with warnings treated as errors,
+17 deterministic tests, package verification, schema-1 upgrade, corruption
+refusal, and forced rollback. The macOS regression job passed too.
+
+| Check | Measured result |
+| --- | --- |
+| Three human speech clips | 3 token differences / 89 reference words, 3.37% WER |
+| 53.145-second recording with pauses | 0 token differences, 3 chunks |
+| Long recording decode time | 4.52 seconds |
+| Model initialization | About 2.3 seconds, measured separately |
+| Peak process working set | 947.3 MiB |
+| Silence and quiet noise | Empty text for both |
+
+The three counted differences were Phoebe/Phebe, dishonoured/dishonored, and
+blessed/blest. They remain counted under the declared scoring rule. The earlier
+run had 2/89 differences; this report uses the final artifact's result rather
+than choosing the better score. Neither run establishes representative accuracy
+for work dictation or ThinkPad latency.
+
+The downloaded ZIP is 481,479,168 bytes. All 15 payload-file hashes and
+dependency pins matched, its executable hash matches the measured executable,
+and its embedded manifest requests asInvoker with uiAccess=false. ZIP SHA-256:
+`cf3fdb8d818ef6f02bc373f339bd9140e46115d88bec3a36cc0517308bd5c1b3`.
+
+Independent Boris/Fresh Eyes review found no P0/P1. The documented native
+inference cancellation limitation remains P2. Real microphone and managed
+standard-user acceptance remain unverified.

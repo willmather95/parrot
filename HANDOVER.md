@@ -1,89 +1,77 @@
-# Parrot upgrade candidate, 2026-09-16
+# Parrot upgrade handoff, 2026-09-16
 
-## User outcome
+## Outcome and authority
 
-Update willmather95/parrot while preserving the working Mac installation. Add a
-Windows version that can run/install under a standard user account. User also
-confirmed disabling HDR on the external LG fixed washed-out captures; that
-display issue needs no code change.
+Canonical source: `/Users/willmather/projects/parrot`.
+Branch: `codex/parrot-windows-preview` in `willmather95/parrot`.
+User approved in-scope commits/pushes, then explicitly requested better Windows
+transcription quality. The Windows 0.2.0 candidate now uses local Parakeet TDT
+0.6B v2 int8 through sherpa-onnx 1.13.8, replacing legacy System.Speech.
 
-## Baseline and canonical source
+The working Mac installation is protected and unchanged. Its executable was
+rechecked at SHA-256
+`6407dc88f0e10b573703f9a5734578639d42d3bb440304c6f1d1fc318908211a`.
+No installed app, LaunchAgent, model payload, or signing identity was replaced.
+The source Mac candidate remains v0.1.5/build 6 with opt-in user installation;
+public stable release remains v0.1.4. No merge or public release was performed.
 
-Canonical checkout: /Users/willmather/projects/parrot.
-Base revision: 2cae942f9ad670b1b468fc86b6a7807bbcf1fe7d, public v0.1.4.
-The older clean checkout under the August 27 task was left untouched.
+User confirmed disabling HDR fixed the LG screenshot/Teams washout. No further
+display work is pending in this task.
 
-The installed /Applications/Parrot.app executable and the executable extracted
-from the public v0.1.4 release both hash to:
-6407dc88f0e10b573703f9a5734578639d42d3bb440304c6f1d1fc318908211a.
-The installed executable hash was rechecked after local work and is unchanged.
-No installed app, LaunchAgent, permission identity, or model payload was replaced.
+## Windows candidate
 
-## Candidate
+- Portable Windows 11 x64 executable and optional per-user installer.
+- Pinned app-local native/managed runtime and model, CPU-only, two threads;
+  no extra installed SDK, VC++ redistributable, GPU driver, or speech language
+  pack is needed by this package. Employer policy acceptance is unverified.
+- In-memory 16 kHz microphone capture, FIFO buffer handling, bounded recordings,
+  quiet-boundary segmentation, asynchronous inference, and stale/cancel guards.
+- Global shortcut, visible recording/cancellation status, protected-focus
+  checks, clipboard-only delivery. No automatic paste or cloud transcription.
+- Recursive checksums, validated old-preview upgrade, transactional rollback,
+  exact dependency sizes/hashes, and license/attribution notices.
+- Normal dictation saves no audio/transcript history. Explicit benchmark CLI
+  writes only the caller-requested JSON result from a supplied test WAV.
 
-- Mac source version 0.1.5/build 6: opt-in --user installation, supported-bundle
-  path resolution, conflict refusal, v0.1.5 compatibility guard, and stronger
-  speech-fixture verification.
-- Windows native C#/.NET Framework preview: 0.1.0 used installed System.Speech.
-  The user requested a quality upgrade on September 16; 0.2.0 replaces that
-  backend with bundled Parakeet TDT v2 int8 through sherpa-onnx. Preserve
-  Ctrl+Alt+Space, visible status, cancellation, protected-focus checks, clipboard
-  only, and the asInvoker manifest. Work-laptop accuracy remains unverified.
-- Windows build/package and per-user install scripts, checksum validation,
-  rollback tests, and a checks workflow that uploads a preview artifact.
-- Documentation describes unsigned/managed-device and real-runtime boundaries.
+## Final verification and delivery
 
-## Verification
+Tested source: `9176eed5de4924ef7173c08150010dfcc882d954`.
+CI: https://github.com/willmather95/parrot/actions/runs/35105457141
+Windows artifact: https://github.com/willmather95/parrot/actions/runs/35105457141/artifacts/10450437152
+Artifacts expire after 14 days and may require GitHub login.
 
-- Baseline Swift tests: 41 passed.
-- Candidate `swift test --disable-automatic-resolution`: 50 passed.
-- `swift build -c release --disable-automatic-resolution`: passed.
-- Candidate real Parakeet generated-speech smoke: passed including phrase match.
-- Shell syntax, ShellCheck, installer guard tests, XML/YAML parsing, targeted
-  credential-pattern scan, and git diff whitespace checks passed.
-- Package.resolved unchanged.
-- Independent Fresh Eyes/Boris reviews found issues; fixes and targeted review
-  are recorded in the current task. Final targeted reviews found no remaining
-  static P0/P1 findings.
-- Windows and macOS CI passed on 019bd5c337e9b10970e75dae4aff4c4692ca91c5:
-  https://github.com/willmather95/parrot/actions/runs/35037410476.
-- Windows compiled with the in-box Framework compiler after making the focus
-  task's generic return type explicit. Nine deterministic tests passed; package,
-  user-folder installation, update, forced rollback, and corruption-rejection
-  checks passed. These ran under runneradmin, not a managed standard account.
-- Downloaded artifact 10423223959 and verified its inner ZIP and payload hashes,
-  plus the embedded asInvoker/uiAccess=false manifest. ZIP SHA-256:
-  654a1f27faa25c49d1263561b2565e7da784fc3ab7419db9a7f36aa5e2a8134a.
+- Windows compile with warnings as errors: passed.
+- 17 deterministic tests: passed.
+- Package/install/update/schema migration/corruption/forced rollback: passed.
+- Three human clips: 3/89 word-token differences; all declared gates passed.
+- 53.145-second derived recording: 0% WER, three chunks, 4.52s decode.
+- Silence/quiet noise: empty results. Peak working set about 947 MiB on CI.
+- Mac CI regression checks passed. Prior candidate local checks also passed:
+  50 Swift tests, release build, phrase-matched Parakeet smoke, installer tests.
+- Independent Boris and Fresh Eyes review: no P0/P1; native mid-chunk
+  cancellation remains a documented P2 limitation.
+- Downloaded final ZIP, verified all 15 payload files and dependency pins, and
+  matched its executable hash to the quality receipt. asInvoker/uiAccess=false
+  embedded manifest verified. ZIP SHA-256: `cf3fdb8d818ef6f02bc373f339bd9140e46115d88bec3a36cc0517308bd5c1b3`.
 
-Detailed command logs are in the current task's work/ directory. Local model
-smoke generated synthetic speech only. No central memory or shared operational
-system was updated.
+Temporary downloaded deliverables and machine-readable receipts are under the
+current task's `outputs/windows-parakeet-preview-0.2.0/`. The earlier 0.1.0 ZIP
+uses the old Windows recognizer and is superseded by this quality preview.
+Durable test details: `docs/windows-transcription-quality.md` and
+`windows/quality/fixtures.json`. No central memory update was made.
 
-## Remaining gates
+## Remaining boundaries and next action
 
-1. Final targeted native Windows review completed with no remaining static P0/P1.
-2. User approved committing and pushing the reviewed candidate on 2026-09-15.
-   Git identity is Bill Mather / will.mather@mathermediasolutions.com. The approved
-   branch is codex/parrot-windows-preview; a public release or installed Mac
-   replacement remains outside this approval.
-3. Branch pushed and both CI jobs passed. The verified Windows preview artifact
-   is available from the run above; CI does not prove work-device acceptance.
-4. Test real microphone, hotkey, clipboard, secure focus, cancel, repeated use,
-   DPI/Narrator, sleep/resume, and install/update on a standard Windows account.
-5. User explicitly requested the local transcription-quality upgrade on
-   September 16. The bundled modern model/runtime candidate is in progress.
-   The earlier CI run and artifact above verify 0.1.0 only; they do not certify
-   the new backend. New Windows inference and package checks are required.
-6. No valid Mac code-signing identities were found locally. Developer ID and
-   Windows Authenticode signing need credentials and acceptance verification.
-7. Publish a labeled Windows prerelease only with release authority and after
-   verification. Keep stable Mac release selection separate. Preserve Mac
-   TCC identity/rollback through any later installed upgrade.
+Have Will extract this new ZIP on the ThinkPad, open Parrot.exe, wait for model
+readiness, and test a harmless paragraph containing names/numbers. Confirm the
+shortcut, microphone, Cancel, and manual Ctrl+V. Hardware capture, device removal,
+sleep/resume, DPI/Narrator, standard-user install, and company controls are not
+proven by runneradmin CI. The CPU/RAM model of the ThinkPad remains unknown.
 
-## Next action
+Cancel invalidates delivery immediately but cannot interrupt an active native
+Decode call. It checks before subsequent chunks. A hung native call requires
+quitting/reopening; new capture is blocked to avoid overlap.
 
-Finish the Windows 0.2.0 neural backend, run the declared public-speech quality
-suite and installer checks on Windows CI, review the integrated candidate, and
-deliver the newly verified artifact. Then test a harmless dictation and manual
-Ctrl+V on the ThinkPad. Do not silently upgrade the daily-running Mac app or
-claim Windows/Mac recognition-quality parity from model-family similarity.
+Public prerelease publication, master merge, signing credentials, and replacing
+the daily Mac installation still require their own explicit authority. Do not
+claim broad best-in-class quality or Mac parity from this small fixture suite.
