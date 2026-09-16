@@ -1,4 +1,4 @@
-# Parrot upgrade candidate, 2026-09-15
+# Parrot upgrade candidate, 2026-09-16
 
 ## User outcome
 
@@ -24,9 +24,11 @@ No installed app, LaunchAgent, permission identity, or model payload was replace
 - Mac source version 0.1.5/build 6: opt-in --user installation, supported-bundle
   path resolution, conflict refusal, v0.1.5 compatibility guard, and stronger
   speech-fixture verification.
-- Windows native C#/.NET Framework preview: local installed System.Speech,
+- Windows native C#/.NET Framework preview: 0.1.0 used installed System.Speech.
+  The user requested a quality upgrade on September 16; 0.2.0 replaces that
+  backend with bundled Parakeet TDT v2 int8 through sherpa-onnx. Preserve
   Ctrl+Alt+Space, visible status, cancellation, protected-focus checks, clipboard
-  only, asInvoker manifest. This is not Parakeet quality parity.
+  only, and the asInvoker manifest. Work-laptop accuracy remains unverified.
 - Windows build/package and per-user install scripts, checksum validation,
   rollback tests, and a checks workflow that uploads a preview artifact.
 - Documentation describes unsigned/managed-device and real-runtime boundaries.
@@ -68,9 +70,10 @@ system was updated.
    is available from the run above; CI does not prove work-device acceptance.
 4. Test real microphone, hotkey, clipboard, secure focus, cancel, repeated use,
    DPI/Narrator, sleep/resume, and install/update on a standard Windows account.
-5. A Windows-compatible modern local model/runtime requires dependency/download
-   approval, currently requested but not received. Built-in speech remains the
-   preview backend.
+5. User explicitly requested the local transcription-quality upgrade on
+   September 16. The bundled modern model/runtime candidate is in progress.
+   The earlier CI run and artifact above verify 0.1.0 only; they do not certify
+   the new backend. New Windows inference and package checks are required.
 6. No valid Mac code-signing identities were found locally. Developer ID and
    Windows Authenticode signing need credentials and acceptance verification.
 7. Publish a labeled Windows prerelease only with release authority and after
@@ -79,7 +82,8 @@ system was updated.
 
 ## Next action
 
-Have the user extract the verified Windows preview and open Parrot.exe on their
-work laptop. Run one harmless dictation and manual Ctrl+V test. Keep exact error
-text if recognizer or company policy blocks it. Do not silently upgrade the
-daily-running Mac app or claim Windows/Mac recognition-quality parity.
+Finish the Windows 0.2.0 neural backend, run the declared public-speech quality
+suite and installer checks on Windows CI, review the integrated candidate, and
+deliver the newly verified artifact. Then test a harmless dictation and manual
+Ctrl+V on the ThinkPad. Do not silently upgrade the daily-running Mac app or
+claim Windows/Mac recognition-quality parity from model-family similarity.

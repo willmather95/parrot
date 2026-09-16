@@ -1,6 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Speech.Recognition;
+using System.Globalization;
 
 namespace Parrot.Windows
 {
@@ -8,76 +7,62 @@ namespace Parrot.Windows
     {
         internal static int Run()
         {
-            bool engineReady = false;
-            bool microphoneInitialized = false;
-
+            bool modelReady = false;
+            bool microphoneReady = false;
             Console.WriteLine("Parrot for Windows doctor");
             Console.WriteLine("Recording: not started");
             Console.WriteLine("Network transcription: not used");
             Console.WriteLine("Audio/transcript file persistence: disabled");
+            Console.WriteLine("Expected sherpa-onnx runtime: " + ParakeetRecognizer.RuntimeVersion);
+            Console.WriteLine("Model: " + ParakeetRecognizer.ModelId);
 
-            RecognizerInfo selected = null;
+            ParakeetRecognizer recognizer = new ParakeetRecognizer();
             try
             {
-                IList<RecognizerInfo> installed = SpeechRecognitionEngine.InstalledRecognizers();
-                Console.WriteLine("Installed speech engines: " + installed.Count);
-                selected = SpeechEngineFactory.FindEnglishRecognizer();
-                if (selected == null)
-                {
-                    Console.WriteLine("BLOCKED speech engine: no installed English recognizer");
-                }
-                else
-                {
-                    Console.WriteLine(
-                        "PASS speech engine: " + selected.Name + " [" + selected.Culture.Name + "]");
-                }
+                double loadSeconds = recognizer.Initialize();
+                modelReady = true;
+                Console.WriteLine(
+                    "PASS local model: initialized and warmed in "
+                    + loadSeconds.ToString("0.000", CultureInfo.InvariantCulture)
+                    + " seconds");
             }
             catch (Exception exception)
             {
-                Console.WriteLine("BLOCKED speech engine: " + exception.Message);
+                Console.WriteLine("BLOCKED local model: " + SafeMessage(exception));
             }
-
-            SpeechRecognitionEngine engine = null;
-            if (selected != null)
+            finally
             {
-                try
-                {
-                    engine = new SpeechRecognitionEngine(selected);
-                    engine.LoadGrammar(new DictationGrammar());
-                    engineReady = true;
-                    Console.WriteLine("PASS dictation engine: initialized");
-                }
+                try { recognizer.Dispose(); }
                 catch (Exception exception)
                 {
-                    Console.WriteLine("BLOCKED dictation engine: " + exception.Message);
+                    modelReady = false;
+                    Console.WriteLine("BLOCKED model cleanup: " + SafeMessage(exception));
                 }
             }
 
-            if (engine != null && engineReady)
+            try
             {
-                try
-                {
-                    engine.SetInputToDefaultAudioDevice();
-                    microphoneInitialized = true;
-                    Console.WriteLine("PASS default microphone: input initialized without recording");
-                }
-                catch (Exception exception)
-                {
-                    Console.WriteLine("BLOCKED default microphone: " + exception.Message);
-                }
+                WaveInCaptureSession.ProbeDefaultMicrophone();
+                microphoneReady = true;
+                Console.WriteLine("PASS default microphone: initialized without recording");
             }
-
-            if (engine != null)
+            catch (Exception exception)
             {
-                engine.Dispose();
+                Console.WriteLine("BLOCKED default microphone: " + SafeMessage(exception));
             }
 
             Console.WriteLine(
-                "Quality note: this preview uses the installed Windows English dictation engine. "
-                + "Accuracy varies by Windows installation and microphone.");
+                "Quality note: local CPU transcription uses the bundled Parakeet TDT 0.6B v2 int8 model.");
             Console.WriteLine(
                 "Doctor initialization does not prove that a live speech sample can be captured.");
-            return engineReady && microphoneInitialized ? 0 : 2;
+            return modelReady && microphoneReady ? 0 : 2;
+        }
+
+        private static string SafeMessage(Exception exception)
+        {
+            return String.IsNullOrWhiteSpace(exception.Message)
+                ? exception.GetType().Name
+                : exception.Message;
         }
     }
 }

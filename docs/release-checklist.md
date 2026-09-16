@@ -4,7 +4,7 @@
 
 The installed macOS app and current public release are v0.1.4. The source
 candidate is v0.1.5, adding opt-in user installation and stronger speech smoke
-verification. Windows is a separate preview using installed System.Speech.
+verification. Windows 0.2.0 is a separate preview with bundled CPU Parakeet inference.
 No public Windows package or notarized Mac release is implied by source changes.
 
 ## Candidate verification
@@ -20,7 +20,10 @@ No public Windows package or notarized Mac release is implied by source changes.
   and retained permissions. Never exercise installer tests against Will's
   daily-running app without explicit replacement authority.
 - Windows CI builds the executable and checks state transitions, package hashes,
-  install/update behavior, and refusal of corrupt downloads.
+  install/update behavior, and refusal of corrupt downloads. It also decodes
+  pinned public speech fixtures with the actual bundled model, measures word
+  errors and timing, and checks silence/quiet-noise output. This small suite is
+  regression evidence, not a broad accuracy benchmark or Mac parity proof.
 - On Windows with a standard account, run every runtime gate in windows/README.md.
   CI may run elevated; a green job is not proof of no-admin work-device acceptance.
 - Run Boris and an independent Fresh Eyes review on the final candidate.

@@ -12,8 +12,10 @@ See [Windows setup and limitations](windows/README.md) and the
 [release checklist](docs/release-checklist.md).
 
 The Windows preview runs from a user-owned folder and copies dictated text for
-manual paste. It uses Windows' installed offline speech engine; it does not yet
-use the Mac's Parakeet model or claim equivalent transcription quality.
+manual paste. The 0.2.0 candidate replaces Windows' legacy speech engine with
+bundled, local Parakeet TDT 0.6B v2 inference through sherpa-onnx. Its CPU-oriented
+int8 model uses the same model family as the Mac app. Accuracy and latency still
+need real microphone verification on the target laptop.
 
 The macOS candidate's installer accepts `--user` to install under
 `~/Applications/Parrot.app`, with a user-local CLI link. This requires a release

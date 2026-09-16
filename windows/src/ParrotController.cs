@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Media;
-using System.Speech.Recognition;
 using System.Threading;
-using System.Windows.Forms;
 
 namespace Parrot.Windows
 {
@@ -12,11 +9,24 @@ namespace Parrot.Windows
         void SetState(CapturePhase phase, string detail, bool toggleEnabled, bool cancelEnabled);
     }
 
+    internal sealed class OperationLease
+    {
+        private volatile bool _cancelled;
+
+        internal OperationLease(long generation)
+        {
+            Generation = generation;
+        }
+
+        internal long Generation { get; private set; }
+        internal bool IsCancelled { get { return _cancelled; } }
+        internal void Cancel() { _cancelled = true; }
+    }
+
     internal sealed class ParrotController : IDisposable
     {
         private const int MaximumRecordingMilliseconds = 10 * 60 * 1000;
-        private const int FinishDeadlineMilliseconds = 5000;
-        private const int TeardownDeadlineMilliseconds = 4000;
+        private const int FinishDeadlineMilliseconds = 5 * 60 * 1000;
 
         private readonly IParrotView _view;
         private readonly SynchronizationContext _uiContext;
@@ -25,13 +35,12 @@ namespace Parrot.Windows
         private readonly CaptureStateMachine _state = new CaptureStateMachine();
         private readonly System.Windows.Forms.Timer _recordingLimitTimer;
         private readonly System.Windows.Forms.Timer _finishDeadlineTimer;
-        private readonly System.Windows.Forms.Timer _teardownDeadlineTimer;
-        private readonly List<string> _segments = new List<string>();
-        private SpeechCaptureSession _session;
-        private Action _teardownContinuation;
-        private int _teardownToken;
-        private bool _teardownInProgress;
-        private bool _teardownTimedOut;
+        private readonly ParakeetRecognizer _recognizer = new ParakeetRecognizer();
+        private WaveInCaptureSession _capture;
+        private OperationLease _operation;
+        private bool _modelReady;
+        private bool _modelLoading;
+        private bool _operationTimedOut;
         private bool _restartRequired;
         private bool _disposed;
 
@@ -41,71 +50,119 @@ namespace Parrot.Windows
             _uiContext = uiContext;
             _focusGuard = new FocusSecurityGuard();
             _clipboardWriter = new ClipboardWriter(_focusGuard);
-
             _recordingLimitTimer = new System.Windows.Forms.Timer();
             _recordingLimitTimer.Interval = MaximumRecordingMilliseconds;
             _recordingLimitTimer.Tick += HandleRecordingLimit;
-
             _finishDeadlineTimer = new System.Windows.Forms.Timer();
             _finishDeadlineTimer.Interval = FinishDeadlineMilliseconds;
             _finishDeadlineTimer.Tick += HandleFinishDeadline;
-
-            _teardownDeadlineTimer = new System.Windows.Forms.Timer();
-            _teardownDeadlineTimer.Interval = TeardownDeadlineMilliseconds;
-            _teardownDeadlineTimer.Tick += HandleTeardownDeadline;
-
-            ShowReady("Local Windows speech preview. Nothing is recording.");
+            BeginModelLoad();
         }
 
-        internal CapturePhase Phase
-        {
-            get { return _state.Phase; }
-        }
+        internal CapturePhase Phase { get { return _state.Phase; } }
 
         internal void Toggle()
         {
-            if (_disposed || _teardownInProgress || _restartRequired)
+            if (_disposed || _restartRequired || _operation != null)
             {
                 return;
             }
-
             if (_state.Phase == CapturePhase.Listening)
             {
                 BeginFinishing(false);
                 return;
             }
-
-            if (_state.Phase == CapturePhase.Finishing)
+            if (_state.Phase == CapturePhase.Finishing || _modelLoading)
             {
                 return;
             }
-
+            if (!_modelReady)
+            {
+                BeginModelLoad();
+                return;
+            }
             StartCapture();
         }
 
         internal void Cancel()
         {
-            if (_session == null)
+            WaveInCaptureSession capture = _capture;
+            OperationLease operation = _operation;
+            long generation;
+            if (capture != null)
+            {
+                generation = capture.Generation;
+            }
+            else if (operation != null)
+            {
+                generation = operation.Generation;
+            }
+            else
             {
                 return;
             }
 
-            long generation = _session.Generation;
             if (!_state.CancelOrTimeout(generation))
             {
                 return;
             }
-
             StopTimers();
-            _segments.Clear();
+            if (operation != null)
+            {
+                operation.Cancel();
+                _view.SetState(
+                    CapturePhase.Finishing,
+                    "Cancelling local transcription. No transcript will be copied...",
+                    false,
+                    false);
+                return;
+            }
+
+            _capture = null;
+            OperationLease cleanup = new OperationLease(generation);
+            cleanup.Cancel();
+            _operation = cleanup;
             _view.SetState(
-                CapturePhase.Ready,
+                CapturePhase.Finishing,
                 "Capture cancelled. Releasing the microphone...",
                 false,
                 false);
-            BeginSessionTeardown(
-                true,
-                delegate { ShowReady("Capture cancelled. No transcript was copied."); });
+            QueueCaptureWork(capture, cleanup, false);
+        }
+
+        private void BeginModelLoad()
+        {
+            if (_disposed || _modelLoading || _modelReady || _operation != null)
+            {
+                return;
+            }
+            _modelLoading = true;
+            _view.SetState(
+                CapturePhase.Ready,
+                "Loading the local Parakeet model. Nothing is recording...",
+                false,
+                false);
+            ThreadPool.QueueUserWorkItem(delegate
+            {
+                Exception error = null;
+                try { _recognizer.Initialize(); }
+                catch (Exception exception) { error = exception; }
+                PostToUi(delegate { CompleteModelLoad(error); });
+            });
+        }
+
+        private void CompleteModelLoad(Exception error)
+        {
+            _modelLoading = false;
+            if (error != null)
+            {
+                _modelReady = false;
+                _state.MarkBlocked();
+                ShowBlocked("Local Parakeet model unavailable: " + SafeMessage(error), true);
+                return;
+            }
+            _modelReady = true;
+            ShowReady("Local Parakeet model ready. Nothing is recording.");
         }
 
         private void StartCapture()
@@ -114,26 +171,7 @@ namespace Parrot.Windows
             if (!focus.Allowed)
             {
                 _state.BlockStart();
-                ShowBlocked(focus.Message);
-                return;
-            }
-
-            RecognizerInfo recognizer;
-            try
-            {
-                recognizer = SpeechEngineFactory.FindEnglishRecognizer();
-            }
-            catch (Exception exception)
-            {
-                _state.BlockStart();
-                ShowBlocked("Windows speech engine unavailable: " + SafeMessage(exception));
-                return;
-            }
-
-            if (recognizer == null)
-            {
-                _state.BlockStart();
-                ShowBlocked("No installed English Windows speech recognizer was found.");
+                ShowBlocked(focus.Message, true);
                 return;
             }
 
@@ -142,17 +180,16 @@ namespace Parrot.Windows
             {
                 return;
             }
-
-            _segments.Clear();
+            WaveInCaptureSession capture = null;
             try
             {
-                _session = new SpeechCaptureSession(
+                capture = new WaveInCaptureSession(
                     generation,
-                    recognizer,
                     _uiContext,
-                    HandleRecognized,
-                    HandleCompleted);
-                _session.Start();
+                    HandleNativeRecordingLimit,
+                    HandleCaptureFailure);
+                capture.Start();
+                _capture = capture;
                 _recordingLimitTimer.Start();
                 _view.SetState(
                     CapturePhase.Listening,
@@ -163,124 +200,130 @@ namespace Parrot.Windows
             catch (Exception exception)
             {
                 _state.CancelOrTimeout(generation);
-                _segments.Clear();
-                string detail = "Microphone or local speech engine unavailable: "
-                    + SafeMessage(exception);
-                if (_session == null)
-                {
-                    ShowBlocked(detail);
-                }
-                else
-                {
-                    _view.SetState(
-                        CapturePhase.Blocked,
-                        detail + " Releasing the microphone...",
-                        false,
-                        false);
-                    BeginSessionTeardown(true, delegate { ShowBlocked(detail); });
-                }
+                if (capture != null) { capture.Dispose(); }
+                ShowBlocked("Default microphone unavailable: " + SafeMessage(exception), true);
             }
         }
 
         private void BeginFinishing(bool reachedLimit)
         {
-            if (_session == null || !_state.TryBeginFinishing(_session.Generation))
+            WaveInCaptureSession capture = _capture;
+            if (capture == null || !_state.TryBeginFinishing(capture.Generation))
             {
                 return;
             }
-
+            _capture = null;
             _recordingLimitTimer.Stop();
             _finishDeadlineTimer.Start();
+            OperationLease operation = new OperationLease(capture.Generation);
+            _operation = operation;
             _view.SetState(
                 CapturePhase.Finishing,
                 reachedLimit
-                    ? "Ten-minute limit reached. Finishing locally..."
-                    : "Finishing locally...",
+                    ? "Ten-minute limit reached. Transcribing locally..."
+                    : "Transcribing locally...",
                 false,
                 true);
-
-            try
-            {
-                _session.RequestStop();
-            }
-            catch (Exception exception)
-            {
-                long generation = _session.Generation;
-                _state.CancelOrTimeout(generation);
-                StopTimers();
-                _segments.Clear();
-                string detail = "Speech recognition could not stop cleanly: "
-                    + SafeMessage(exception);
-                _view.SetState(
-                    CapturePhase.Blocked,
-                    detail + " Releasing the microphone...",
-                    false,
-                    false);
-                BeginSessionTeardown(true, delegate { ShowBlocked(detail); });
-            }
+            QueueCaptureWork(capture, operation, true);
         }
 
-        private void HandleRecognized(long generation, string text)
+        private void QueueCaptureWork(
+            WaveInCaptureSession capture,
+            OperationLease operation,
+            bool transcribe)
         {
-            if (_session == null
-                || generation != _session.Generation
-                || generation != _state.ActiveGeneration
-                || (_state.Phase != CapturePhase.Listening
-                    && _state.Phase != CapturePhase.Finishing))
+            ThreadPool.QueueUserWorkItem(delegate
+            {
+                Exception error = null;
+                ParakeetTranscriptionResult result = null;
+                try
+                {
+                    float[] samples = capture.StopAndGetSamples();
+                    capture.Dispose();
+                    if (transcribe && !operation.IsCancelled)
+                    {
+                        result = _recognizer.Transcribe(
+                            samples,
+                            WaveInCaptureSession.SampleRate,
+                            delegate { return operation.IsCancelled; });
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    operation.Cancel();
+                }
+                catch (Exception exception)
+                {
+                    error = exception;
+                    try { capture.Dispose(); }
+                    catch (Exception) { }
+                }
+                PostToUi(delegate { CompleteCaptureWork(operation, result, error); });
+            });
+        }
+
+        private void CompleteCaptureWork(
+            OperationLease operation,
+            ParakeetTranscriptionResult result,
+            Exception error)
+        {
+            if (_operation != operation)
             {
                 return;
             }
+            _finishDeadlineTimer.Stop();
+            _operation = null;
 
-            if (!String.IsNullOrWhiteSpace(text))
+            if (_operationTimedOut)
             {
-                _segments.Add(text.Trim());
+                _operationTimedOut = false;
+                ShowBlocked(
+                    "Local transcription recovered after timing out. The capture was discarded; you can try again.",
+                    true);
+                return;
             }
-        }
-
-        private void HandleCompleted(long generation, Exception error, bool cancelled)
-        {
-            if (_session == null || generation != _session.Generation)
+            if (operation.IsCancelled)
             {
+                if (error == null)
+                {
+                    ShowReady("Capture cancelled. No transcript was copied.");
+                }
+                else
+                {
+                    _restartRequired = true;
+                    ShowBlocked(
+                        "Capture cancelled, but microphone cleanup failed: " + SafeMessage(error),
+                        false);
+                }
                 return;
             }
 
             CompletionDisposition disposition = _state.Complete(
-                generation,
-                error == null && !cancelled);
+                operation.Generation,
+                error == null && result != null);
             if (disposition == CompletionDisposition.Ignored)
             {
                 return;
             }
-
-            StopTimers();
-            string transcript = String.Join(" ", _segments.ToArray()).Trim();
-            _segments.Clear();
-            _view.SetState(
-                CapturePhase.Finishing,
-                "Releasing the microphone...",
-                false,
-                false);
-            BeginSessionTeardown(
-                false,
-                delegate { FinishCompletedCapture(disposition, transcript); });
-        }
-
-        private void FinishCompletedCapture(
-            CompletionDisposition disposition,
-            string transcript)
-        {
-            if (disposition == CompletionDisposition.Discard)
+            if (disposition == CompletionDisposition.Discard || error != null)
             {
-                ShowBlocked("Recognition did not complete cleanly. Transcript discarded.");
+                _restartRequired = true;
+                ShowBlocked(
+                    "Local transcription failed. Transcript discarded: "
+                        + (error == null ? "unknown local inference error" : SafeMessage(error)),
+                    false);
                 return;
             }
+            FinishCompletedCapture(result.Text);
+        }
 
+        private void FinishCompletedCapture(string transcript)
+        {
             if (String.IsNullOrWhiteSpace(transcript))
             {
                 ShowReady("No speech was recognized.");
                 return;
             }
-
             string detail;
             ClipboardWriteResult result = _clipboardWriter.TryWrite(transcript, out detail);
             if (result == ClipboardWriteResult.Copied)
@@ -288,8 +331,7 @@ namespace Parrot.Windows
                 ShowReady(detail);
                 return;
             }
-
-            ShowBlocked(detail);
+            ShowBlocked(detail, true);
         }
 
         private void HandleRecordingLimit(object sender, EventArgs eventArgs)
@@ -298,123 +340,52 @@ namespace Parrot.Windows
             BeginFinishing(true);
         }
 
+        private void HandleNativeRecordingLimit(long generation)
+        {
+            if (_capture != null && _capture.Generation == generation)
+            {
+                BeginFinishing(true);
+            }
+        }
+
+        private void HandleCaptureFailure(long generation, Exception exception)
+        {
+            WaveInCaptureSession capture = _capture;
+            if (capture == null
+                || capture.Generation != generation
+                || !_state.CancelOrTimeout(generation))
+            {
+                return;
+            }
+            StopTimers();
+            _capture = null;
+            OperationLease cleanup = new OperationLease(generation);
+            cleanup.Cancel();
+            _operation = cleanup;
+            _view.SetState(
+                CapturePhase.Blocked,
+                "Microphone capture failed. Discarding the capture...",
+                false,
+                false);
+            QueueCaptureWork(capture, cleanup, false);
+        }
+
         private void HandleFinishDeadline(object sender, EventArgs eventArgs)
         {
             _finishDeadlineTimer.Stop();
-            if (_session == null)
+            OperationLease operation = _operation;
+            if (operation == null)
             {
                 return;
             }
-
-            long generation = _session.Generation;
-            if (!_state.CancelOrTimeout(generation))
-            {
-                return;
-            }
-
-            _segments.Clear();
+            operation.Cancel();
+            _state.CancelOrTimeout(operation.Generation);
+            _operationTimedOut = true;
             _view.SetState(
                 CapturePhase.Blocked,
-                "Speech recognition timed out. Transcript discarded. Releasing the microphone...",
+                "Local transcription timed out. Transcript discarded. Wait for recovery or restart Parrot.",
                 false,
                 false);
-            BeginSessionTeardown(
-                true,
-                delegate
-                {
-                    ShowBlocked("Speech recognition timed out. Transcript discarded.");
-                });
-        }
-
-        private void BeginSessionTeardown(bool cancel, Action continuation)
-        {
-            SpeechCaptureSession session = _session;
-            _session = null;
-            if (session == null)
-            {
-                continuation();
-                return;
-            }
-
-            _teardownInProgress = true;
-            _teardownTimedOut = false;
-            _teardownContinuation = continuation;
-            _teardownToken++;
-            int token = _teardownToken;
-            _teardownDeadlineTimer.Start();
-
-            ThreadPool.QueueUserWorkItem(delegate
-            {
-                Exception error = null;
-                try
-                {
-                    if (cancel)
-                    {
-                        session.RequestCancel();
-                    }
-
-                    session.Dispose();
-                }
-                catch (Exception exception)
-                {
-                    error = exception;
-                }
-
-                PostToUi(delegate { CompleteSessionTeardown(token, error); });
-            });
-        }
-
-        private void HandleTeardownDeadline(object sender, EventArgs eventArgs)
-        {
-            _teardownDeadlineTimer.Stop();
-            if (!_teardownInProgress)
-            {
-                return;
-            }
-
-            _teardownTimedOut = true;
-            _teardownContinuation = null;
-            _view.SetState(
-                CapturePhase.Blocked,
-                "Microphone cleanup timed out. Capture discarded. Wait for recovery or restart Parrot.",
-                false,
-                false);
-        }
-
-        private void CompleteSessionTeardown(int token, Exception error)
-        {
-            if (_disposed || token != _teardownToken || !_teardownInProgress)
-            {
-                return;
-            }
-
-            _teardownDeadlineTimer.Stop();
-            _teardownInProgress = false;
-            Action continuation = _teardownContinuation;
-            _teardownContinuation = null;
-
-            if (error != null)
-            {
-                _restartRequired = true;
-                _view.SetState(
-                    CapturePhase.Blocked,
-                    "Microphone cleanup failed. Restart Parrot before recording again.",
-                    false,
-                    false);
-                return;
-            }
-
-            if (_teardownTimedOut)
-            {
-                _teardownTimedOut = false;
-                ShowBlocked("Microphone cleanup recovered. The capture was discarded; you can try again.");
-                return;
-            }
-
-            if (continuation != null)
-            {
-                continuation();
-            }
         }
 
         private void PostToUi(Action action)
@@ -424,17 +395,11 @@ namespace Parrot.Windows
                 _uiContext.Post(
                     delegate(object ignored)
                     {
-                        if (!_disposed)
-                        {
-                            action();
-                        }
+                        if (!_disposed) { action(); }
                     },
                     null);
             }
-            catch (InvalidOperationException)
-            {
-                // The application is already closing.
-            }
+            catch (InvalidOperationException) { }
         }
 
         private void StopTimers()
@@ -445,13 +410,17 @@ namespace Parrot.Windows
 
         private void ShowReady(string detail)
         {
-            _view.SetState(CapturePhase.Ready, detail, true, false);
+            _view.SetState(CapturePhase.Ready, detail, _modelReady, false);
         }
 
-        private void ShowBlocked(string detail)
+        private void ShowBlocked(string detail, bool allowRetry)
         {
             SystemSounds.Exclamation.Play();
-            _view.SetState(CapturePhase.Blocked, detail, true, false);
+            _view.SetState(
+                CapturePhase.Blocked,
+                detail,
+                allowRetry && !_restartRequired && _operation == null,
+                false);
         }
 
         private static string SafeMessage(Exception exception)
@@ -463,37 +432,29 @@ namespace Parrot.Windows
 
         public void Dispose()
         {
-            if (_disposed)
-            {
-                return;
-            }
-
+            if (_disposed) { return; }
             _disposed = true;
             StopTimers();
-            _teardownDeadlineTimer.Stop();
-            _teardownContinuation = null;
-            SpeechCaptureSession session = _session;
-            _session = null;
-            if (session != null)
+            OperationLease operation = _operation;
+            if (operation != null) { operation.Cancel(); }
+            WaveInCaptureSession capture = _capture;
+            _capture = null;
+            if (capture != null)
             {
-                _state.CancelOrTimeout(session.Generation);
+                _state.CancelOrTimeout(capture.Generation);
                 ThreadPool.QueueUserWorkItem(delegate
                 {
-                    try
-                    {
-                        session.RequestCancel();
-                        session.Dispose();
-                    }
-                    catch (Exception)
-                    {
-                    }
+                    try { capture.Dispose(); }
+                    catch (Exception) { }
                 });
             }
-
-            _segments.Clear();
+            ThreadPool.QueueUserWorkItem(delegate
+            {
+                try { _recognizer.Dispose(); }
+                catch (Exception) { }
+            });
             _recordingLimitTimer.Dispose();
             _finishDeadlineTimer.Dispose();
-            _teardownDeadlineTimer.Dispose();
         }
     }
 }

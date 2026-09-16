@@ -31,7 +31,7 @@ jobs:
 
   windows:
     runs-on: windows-2022
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -42,6 +42,9 @@ jobs:
       - name: Verify package and user installation
         shell: powershell
         run: ./windows/Test-Package.ps1
+      - name: Measure local transcription quality
+        shell: powershell
+        run: python ./windows/Test-Quality.py --exe ./windows/build/Parrot.exe
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: parrot-windows-x64-preview
@@ -49,4 +52,12 @@ jobs:
             windows/build/parrot-windows-x64-preview.zip
             windows/build/parrot-windows-x64-preview.zip.sha256
           if-no-files-found: error
+          retention-days: 14
+      - name: Upload transcription evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: parrot-windows-quality-evidence
+          path: windows/build/quality/quality-results.json
+          if-no-files-found: warn
           retention-days: 14

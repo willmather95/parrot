@@ -1,0 +1,31 @@
+{
+  "fixtures": [
+    {
+      "id": "parakeet-phoebe-0",
+      "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2/resolve/main/test_wavs/0.wav",
+      "sha256": "5fceacff0315d49cb59fcc505bcecf1ed5f2f35c2897b1e65a59f30e5d922150",
+      "reference": "Well, I don't wish to see it any more, observed Phoebe, turning away her eyes. It is certainly very like the old portrait.",
+      "max_wer": 0.12,
+      "license": "CC BY 4.0",
+      "source": "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/nemo-transducer-models.html"
+    },
+    {
+      "id": "librispeech-1089-134686-0001",
+      "url": "https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-en-2023-06-26/resolve/main/test_wavs/0.wav",
+      "sha256": "6bc58a4efdf20daac252b6b1502632601a71efe0308f6757dc1eda34891a7e4f",
+      "reference": "After early nightfall the yellow lamps would light up here and there the squalid quarter of the brothels.",
+      "max_wer": 0.12,
+      "license": "CC BY 4.0 (LibriSpeech corpus; model repository metadata is Apache-2.0)",
+      "source": "https://www.openslr.org/12"
+    },
+    {
+      "id": "librispeech-1221-135766-0001",
+      "url": "https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-en-2023-06-26/resolve/main/test_wavs/1.wav",
+      "sha256": "5143a6ba93c4b274e2c4ac22deb75c2c48936c853f0519add1de828b6c79cc5a",
+      "reference": "God, as a direct consequence of the sin which man thus punished, had given her a lovely child, whose place was on that same dishonoured bosom, to connect her parent for ever with the race and descent of mortals, and to be finally a blessed soul in heaven.",
+      "max_wer": 0.12,
+      "license": "CC BY 4.0 (LibriSpeech corpus; model repository metadata is Apache-2.0)",
+      "source": "https://www.openslr.org/12"
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 **Status:** draft
 **Owner:** Parrot
 **Surface:** Windows desktop utility and notification-area icon
-**Updated:** 2026-09-15
+**Updated:** 2026-09-16
 **Source context:** Mac toggle-dictation specification, Windows foundation prototype, user request for a work-laptop version without administrator access.
 
 ## 1. Product Moment
@@ -20,7 +20,7 @@ The signature moment is finishing a thought and seeing “Copied. Press Ctrl+V.�
 
 1. Current state: Ready, Listening, Finishing, Copied, or Blocked.
 2. Start/Stop and Cancel controls, plus Ctrl+Alt+Space instruction.
-3. Local Windows speech backend and its availability.
+3. Local Parakeet speech backend and its availability.
 
 No transcript history, account, or upsell competes with dictation.
 
@@ -36,7 +36,7 @@ Use native Windows Forms controls in a compact modeless main window, with a noti
 | Listening | Safe focus and successful microphone start | Listening and Stop | Stop, Cancel, error, ten-minute cap |
 | Finishing | Stop | Finishing; no new start | Completion or bounded timeout |
 | Copied | Nonempty result and safe clipboard delivery | Press Ctrl+V | Next start |
-| Blocked | Missing recognizer, permission, unknown/secure focus, timeout, or copy failure | Specific recovery instruction without transcript content | Retry or restart |
+| Blocked | Missing bundled model/runtime, permission, unknown/secure focus, timeout, or copy failure | Specific recovery instruction without transcript content | Retry or restart |
 
 Cancel, completion errors, and timeouts discard the capture. Late callbacks cannot publish or enter another capture. A capture never starts automatically on launch or after failure.
 
@@ -67,15 +67,15 @@ No network call, media download, or model loading blocks the initial window. Spe
 
 ## 11. Content Truth and Microcopy
 
-Headline: “Parrot for Windows”. Primary action: “Start recording”. Label the built-in speech backend as a preview; do not imply Parakeet quality, managed-device approval, or verified microphone capture from initialization alone. Errors explain the smallest recovery action.
+Headline: “Parrot for Windows”. Primary action: “Start recording”. Label the local Parakeet backend and preview status. Do not imply measured work-laptop accuracy, managed-device approval, or verified microphone capture from initialization alone. Errors explain the smallest recovery action.
 
 ## 12. Implementation Boundaries
 
-Use in-box .NET Framework, Windows Forms, System.Speech, and UI Automation. Source lives in windows/. Keep macOS app/runtime behavior unchanged. No service, driver, administrator manifest, execution-policy bypass, cloud transcription, transcript logging, or automatic startup registration. Signing and modern local-model dependencies require separate available credentials/authority.
+Use in-box .NET Framework, Windows Forms, UI Automation, and pinned app-local sherpa-onnx with Parakeet TDT 0.6B v2 int8. Capture PCM audio in memory; load the model and decode off the UI thread. Source lives in windows/. Keep macOS app/runtime behavior unchanged. No service, driver, administrator manifest, execution-policy bypass, cloud transcription, transcript logging, or automatic startup registration. The user requested the local-model quality upgrade on September 16. Signing still requires separate credentials and authority.
 
 ## 13. Assumptions and Open Decisions
 
-Windows 11 x64 is the first supported target. Installed English System.Speech availability and real dictation quality are unknown until checked on the work laptop. Employer application-control policy may reject unsigned executables even without elevation. Mac-like model quality requires a separate approved backend.
+Windows 11 x64 is the first supported target. Target hardware is a Lenovo ThinkPad of unknown CPU/RAM. Use CPU inference without a GPU requirement. Real microphone accuracy and latency remain unknown until checked on that laptop. Employer application-control policy may reject unsigned executables even without elevation. The larger portable package carries its model and runtime so first use needs no download or language pack.
 
 ## 14. Acceptance Criteria
 
@@ -86,9 +86,11 @@ Windows 11 x64 is the first supported target. Installed English System.Speech av
 5. PASS if Cancel, timeout, error, and stale callbacks cannot publish text.
 6. PASS if repeated recordings release resources and remain independent.
 7. PASS if keyboard, Narrator, touch, and 100/150/200% scaling preserve usable controls.
-8. PASS if a missing recognizer/permission produces an actionable error without downloading anything.
+8. PASS if a missing model/runtime or microphone permission produces an actionable error without downloading anything.
 9. PASS if the running macOS installation remains unchanged.
+10. PASS if pinned public speech fixtures meet the declared word-error thresholds and silence does not produce text. Report timings without treating CI hardware as the ThinkPad.
+11. PASS if long input is bounded and segmented, and cancellation prevents stale inference from copying text.
 
 ## 15. Verification Plan
 
-Run deterministic Windows state-machine tests, compilation, manifest inspection, package checksum validation, and per-user install checks in Windows CI. Real Windows verification covers microphone, editor paste, password/unknown focus, hotkey conflict, cancel, sleep/resume, unplugged microphone, DPI, Narrator, and quit. These remain unverified on a Mac. Boris and independently orchestrated Fresh Eyes review cover the final candidate. No web Lighthouse or mobile browser checks apply to a native desktop utility.
+Run deterministic Windows state-machine tests, compilation, manifest inspection, package checksum validation, per-user install checks, and actual neural inference with public speech and non-speech fixtures in Windows CI. Real Windows verification covers microphone, editor paste, password/unknown focus, hotkey conflict, cancel, sleep/resume, unplugged microphone, DPI, Narrator, and quit. These remain unverified on a Mac. Boris and independently orchestrated Fresh Eyes review cover the final candidate. No web Lighthouse or mobile browser checks apply to a native desktop utility.

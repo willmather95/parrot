@@ -10,3 +10,4 @@
 # Local packages and verification output
 dist/
 windows/build/
+windows/__pycache__/

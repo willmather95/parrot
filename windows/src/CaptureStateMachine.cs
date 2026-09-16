@@ -72,8 +72,8 @@ namespace Parrot.Windows
                 return CompletionDisposition.Ignored;
             }
 
-            // System.Speech can end on a device or engine error before Parrot
-            // asks it to stop. A current completion while Listening is real,
+            // A capture backend can end on a device error before Parrot asks
+            // it to stop. A current completion while Listening is real,
             // but it is never publishable because the normal stop boundary was
             // not reached.
             if (_phase == CapturePhase.Listening)

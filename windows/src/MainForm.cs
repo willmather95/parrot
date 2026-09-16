@@ -40,7 +40,7 @@ namespace Parrot.Windows
         {
             Text = "Parrot for Windows";
             AccessibleName = "Parrot for Windows dictation";
-            AccessibleDescription = "Local toggle-to-dictate preview using the installed Windows speech engine.";
+            AccessibleDescription = "Local toggle-to-dictate preview using Parakeet speech recognition.";
             AutoScaleMode = AutoScaleMode.Dpi;
             ClientSize = new Size(470, 285);
             MinimumSize = new Size(430, 275);
@@ -69,7 +69,7 @@ namespace Parrot.Windows
             layout.Controls.Add(heading);
 
             Label preview = new Label();
-            preview.Text = "Preview: installed English Windows speech, processed locally";
+            preview.Text = "Preview: Parakeet TDT 0.6B v2 int8, processed locally on CPU";
             preview.AutoSize = true;
             preview.ForeColor = SystemColors.GrayText;
             preview.Margin = new Padding(0, 0, 0, 18);

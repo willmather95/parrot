@@ -1,0 +1,137 @@
+{
+  "schema": 1,
+  "artifacts": [
+    {
+      "name": "sherpa-onnx managed API",
+      "type": "zip",
+      "version": "1.13.8",
+      "license": "Apache-2.0",
+      "source": "https://www.nuget.org/packages/org.k2fsa.sherpa.onnx/1.13.8",
+      "url": "https://api.nuget.org/v3-flatcontainer/org.k2fsa.sherpa.onnx/1.13.8/org.k2fsa.sherpa.onnx.1.13.8.nupkg",
+      "cacheFile": "org.k2fsa.sherpa.onnx.1.13.8.nupkg",
+      "bytes": 201971,
+      "sha256": "f89f28fc6fbbc894a46c2c73b040780ec6ea7a21400d9d219dce4d2333981d57",
+      "entries": [
+        {
+          "archivePath": "lib/net40/sherpa-onnx.dll",
+          "outputPath": "sherpa-onnx.dll",
+          "bytes": 51200,
+          "sha256": "901fb6f6fd71ed535fc9ab0589ec600a5378b7b5907600fc325a9b8fbb68d4d1"
+        }
+      ]
+    },
+    {
+      "name": "sherpa-onnx Windows x64 CPU runtime",
+      "type": "zip",
+      "version": "1.13.8",
+      "license": "Apache-2.0",
+      "source": "https://www.nuget.org/packages/org.k2fsa.sherpa.onnx.runtime.win-x64/1.13.8",
+      "url": "https://api.nuget.org/v3-flatcontainer/org.k2fsa.sherpa.onnx.runtime.win-x64/1.13.8/org.k2fsa.sherpa.onnx.runtime.win-x64.1.13.8.nupkg",
+      "cacheFile": "org.k2fsa.sherpa.onnx.runtime.win-x64.1.13.8.nupkg",
+      "bytes": 8535869,
+      "sha256": "2257c06893d1d90792ea3157606de33a51122d935b6913bed5442d2ffb9e9bd7",
+      "entries": [
+        {
+          "archivePath": "runtimes/win-x64/native/onnxruntime.dll",
+          "outputPath": "onnxruntime.dll",
+          "bytes": 17799168,
+          "sha256": "7f66f939a881baf4f46a2216496798edf4a1429878b646d12674aa62f27d8a25"
+        },
+        {
+          "archivePath": "runtimes/win-x64/native/sherpa-onnx-c-api.dll",
+          "outputPath": "sherpa-onnx-c-api.dll",
+          "bytes": 4605952,
+          "sha256": "2729a0da3fbd20fb4e14e157f7cc0e00af848b55f04121319d445c138aeba214"
+        }
+      ]
+    },
+    {
+      "name": "Parakeet TDT 0.6b v2 INT8 encoder",
+      "type": "file",
+      "version": "1ab9323565ddb038682214b292f588070a538ce2",
+      "license": "CC-BY-4.0",
+      "source": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/tree/1ab9323565ddb038682214b292f588070a538ce2",
+      "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/resolve/1ab9323565ddb038682214b292f588070a538ce2/encoder.int8.onnx",
+      "outputPath": "models/parakeet-tdt-0.6b-v2-int8/encoder.int8.onnx",
+      "bytes": 652184296,
+      "sha256": "a32b12d17bbbc309d0686fbbcc2987b5e9b8333a7da83fa6b089f0a2acd651ab"
+    },
+    {
+      "name": "Parakeet TDT 0.6b v2 INT8 decoder",
+      "type": "file",
+      "version": "1ab9323565ddb038682214b292f588070a538ce2",
+      "license": "CC-BY-4.0",
+      "source": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/tree/1ab9323565ddb038682214b292f588070a538ce2",
+      "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/resolve/1ab9323565ddb038682214b292f588070a538ce2/decoder.int8.onnx",
+      "outputPath": "models/parakeet-tdt-0.6b-v2-int8/decoder.int8.onnx",
+      "bytes": 7257753,
+      "sha256": "b6bb64963457237b900e496ee9994b59294526439fbcc1fecf705b31a15c6b4e"
+    },
+    {
+      "name": "Parakeet TDT 0.6b v2 INT8 joiner",
+      "type": "file",
+      "version": "1ab9323565ddb038682214b292f588070a538ce2",
+      "license": "CC-BY-4.0",
+      "source": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/tree/1ab9323565ddb038682214b292f588070a538ce2",
+      "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/resolve/1ab9323565ddb038682214b292f588070a538ce2/joiner.int8.onnx",
+      "outputPath": "models/parakeet-tdt-0.6b-v2-int8/joiner.int8.onnx",
+      "bytes": 1739080,
+      "sha256": "7946164367946e7f9f29a122407c3252b680dbae9a51343eb2488d057c3c43d2"
+    },
+    {
+      "name": "Parakeet TDT 0.6b v2 tokens",
+      "type": "file",
+      "version": "1ab9323565ddb038682214b292f588070a538ce2",
+      "license": "CC-BY-4.0",
+      "source": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/tree/1ab9323565ddb038682214b292f588070a538ce2",
+      "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/resolve/1ab9323565ddb038682214b292f588070a538ce2/tokens.txt",
+      "outputPath": "models/parakeet-tdt-0.6b-v2-int8/tokens.txt",
+      "bytes": 9384,
+      "sha256": "ec182b70dd42113aff6c5372c75cac58c952443eb22322f57bbd7f53977d497d"
+    },
+    {
+      "name": "sherpa-onnx Apache 2.0 license",
+      "type": "file",
+      "version": "dc5583f49917e4c95f6e7d862bb378e4ed5e9076",
+      "license": "Apache-2.0",
+      "source": "https://github.com/k2-fsa/sherpa-onnx/tree/dc5583f49917e4c95f6e7d862bb378e4ed5e9076",
+      "url": "https://raw.githubusercontent.com/k2-fsa/sherpa-onnx/dc5583f49917e4c95f6e7d862bb378e4ed5e9076/LICENSE",
+      "outputPath": "licenses/LICENSE-sherpa-onnx.txt",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "name": "ONNX Runtime MIT license",
+      "type": "file",
+      "version": "1.28.2",
+      "license": "MIT",
+      "source": "https://github.com/microsoft/onnxruntime/tree/v1.28.2",
+      "url": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.28.2/LICENSE",
+      "outputPath": "licenses/LICENSE-onnxruntime.txt",
+      "bytes": 1073,
+      "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c"
+    },
+    {
+      "name": "ONNX Runtime third-party notices",
+      "type": "file",
+      "version": "1.28.2",
+      "license": "Multiple; see notice",
+      "source": "https://github.com/microsoft/onnxruntime/tree/v1.28.2",
+      "url": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.28.2/ThirdPartyNotices.txt",
+      "outputPath": "licenses/NOTICE-onnxruntime-third-party.txt",
+      "bytes": 325054,
+      "sha256": "0e07b95f3a8d6230037707c5c4a2b554d12c4cb67369669ac255635528ffcee2"
+    },
+    {
+      "name": "Parakeet model CC BY 4.0 license",
+      "type": "file",
+      "version": "4.0",
+      "license": "CC-BY-4.0",
+      "source": "https://creativecommons.org/licenses/by/4.0/",
+      "url": "https://creativecommons.org/licenses/by/4.0/legalcode.txt",
+      "outputPath": "licenses/LICENSE-parakeet-model.txt",
+      "bytes": 18657,
+      "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+    }
+  ]
+}
