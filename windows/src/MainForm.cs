@@ -304,6 +304,8 @@ namespace Parrot.Windows
                         || _controller.Phase == CapturePhase.Finishing))
                 {
                     _controller.Cancel();
+                    eventArgs.Cancel = true;
+                    return;
                 }
 
                 eventArgs.Cancel = true;

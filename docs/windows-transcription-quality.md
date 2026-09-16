@@ -46,6 +46,12 @@ latency still require a standard-user Windows test. Quality acceptance for Will
 should include his actual work vocabulary and names. Never upload his work
 recordings for testing without explicit direction.
 
+Native inference is not forcibly interrupted in this in-process design. Cancel
+and the deadline invalidate delivery immediately and prevent subsequent chunks,
+but must wait for the current chunk's native call to return. A hung native call
+requires quitting/reopening Parrot; new capture remains blocked rather than
+overlapping model operations. Process isolation is a possible later improvement.
+
 ## Sources
 
 - [NVIDIA Parakeet TDT v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2)

@@ -57,6 +57,9 @@ approved software process. Do not disable those controls or run as administrator
   and the destination application have their own retention behavior.
 - Password fields, unknown focus, and higher-privilege targets fail closed.
 - Cancel discards the capture. A ten-minute limit bounds a recording.
+- Cancellation suppresses delivery immediately, but an active native inference
+  chunk must finish before its resources can be reused. If it stalls, quit and
+  reopen Parrot. New recordings stay blocked during cleanup.
 - No automatic typing or foreground paste is sent.
 
 ## Build and checks
