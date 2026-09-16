@@ -9,12 +9,16 @@ guaranteed. This is an English dictation model with punctuation and casing.
 
 ## Download and open
 
-The source candidate includes a Windows CI build. A public downloadable release
-has not yet been published. After the checks workflow succeeds, its
-`parrot-windows-x64-preview` artifact contains the ZIP and SHA-256 checksum.
-Downloading a GitHub Actions artifact may require a GitHub account.
+**No terminal command is needed for portable use. The root README's macOS
+`curl ... | bash` installer is not for Windows.**
 
-1. On Windows 11 x64, extract the ZIP to a folder you own.
+Sign in to GitHub and open the [verified 0.2.0 build](https://github.com/willmather95/parrot/actions/runs/35105457141).
+Scroll to **Artifacts** and download **parrot-windows-x64-preview** (about 481 MB).
+Artifacts expire after 14 days; [check newer preview builds](https://github.com/willmather95/parrot/actions/workflows/checks.yml?query=branch%3Acodex%2Fparrot-windows-preview)
+if it has expired. A public Windows release has not yet been published.
+
+1. On Windows 11 x64, right-click the downloaded ZIP and choose **Extract All**
+   into a folder you own. If that reveals another ZIP, extract it too.
 2. Open `Parrot.exe`. No Python, Node, .NET SDK, service, or driver installation is
    needed. It uses the .NET Framework already included with Windows 11 and
    app-local inference libraries. Keep the entire extracted folder together,

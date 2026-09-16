@@ -1,30 +1,59 @@
 # Parrot
 
-Fast, private voice-to-text for Apple Silicon Macs. Press one shortcut, speak naturally, and get clean text ready to paste.
+Fast, private voice-to-text for Windows and Apple Silicon Macs. Press one shortcut, speak naturally, and get clean text ready to paste.
 
-Audio and transcription stay on your Mac. There is no account, subscription, or cloud API.
+Audio and transcription stay on your computer. Parrot requires no transcription account, subscription, or cloud API. GitHub sign-in is needed to download the Windows preview artifact.
 
-## Upgrade candidate and Windows preview
+## Choose your platform
 
-The working source now includes a **Windows 11 x64 preview** and opt-in macOS
-per-user installation. These changes are not yet a published release.
-See [Windows setup and limitations](windows/README.md) and the
-[release checklist](docs/release-checklist.md).
+| Platform | Status | Setup | Dictate / paste |
+| --- | --- | --- | --- |
+| Windows 11 x64 | 0.2.0 preview | [Download and extract the Windows package](#windows-download-and-open) | Ctrl+Alt+Space / Ctrl+V |
+| Apple Silicon Mac, macOS 14+ | macOS release | [Run the Mac installer](#macos-install) | Control+Fn/Globe / Command+V |
 
-The Windows preview runs from a user-owned folder and copies dictated text for
-manual paste. The 0.2.0 candidate replaces Windows' legacy speech engine with
-bundled, local Parakeet TDT 0.6B v2 inference through sherpa-onnx. Its CPU-oriented
-int8 model uses the same model family as the Mac app. Accuracy and latency still
-need real microphone verification on the target laptop.
+## Windows: download and open
 
-The macOS candidate's installer accepts `--user` to install under
-`~/Applications/Parrot.app`, with a user-local CLI link. This requires a release
-containing the matching new app; the current public v0.1.4 installer does not
-support this mode. No implicit migration between system and user locations is
-performed. Microphone, Accessibility, and company application policies still
-apply.
+**No terminal command is needed. Do not run the Mac `curl ... | bash` command on Windows.**
 
-## Install
+1. Sign in to GitHub and open the [verified Windows 0.2.0 build](https://github.com/willmather95/parrot/actions/runs/35105457141).
+2. Scroll to **Artifacts** and download **parrot-windows-x64-preview** (about 481 MB).
+3. On Windows, right-click the downloaded ZIP and choose **Extract All**. If it contains another ZIP, extract that ZIP too.
+4. Open **Parrot.exe** in the extracted folder. Keep the DLLs and `models` folder alongside it. Wait until Parrot says the local model is ready.
+5. Focus an ordinary text editor. Press **Ctrl+Alt+Space**, speak, and press the shortcut again to stop. When Parrot says the result was copied, press **Ctrl+V**.
+
+The package includes its local Parakeet speech model and CPU runtime. It needs no Python, Node, SDK, GPU driver, Windows speech language pack, or administrator installer. It does not type or paste automatically, and does not register automatic startup.
+
+This is an **unsigned Windows preview**. Company application policies may still block it. Use your employer's approved software process if blocked. Real microphone quality and performance still need a check on your laptop.
+
+GitHub Actions downloads require sign-in and expire after 14 days. If this build's artifact has expired, check [newer preview builds](https://github.com/willmather95/parrot/actions/workflows/checks.yml?query=branch%3Acodex%2Fparrot-windows-preview) for a successful Windows artifact. The **Releases / latest** installer currently installs the Mac version only.
+
+### Windows: optional installation and updates
+
+Portable use is enough. To install into `%LOCALAPPDATA%\Programs\Parrot`, close Parrot, open PowerShell **in the extracted folder containing Parrot.exe and Install.ps1**, and run:
+
+```powershell
+powershell.exe -NoProfile -File .\Install.ps1
+```
+
+This optional installer requests no administrator rights. For an update, download and extract the new package, quit Parrot, and run the new package's installer. It verifies files and supports rollback. Do not change execution policy or run as administrator if company policy blocks the script.
+
+### Windows: troubleshooting
+
+- **“bash is not recognized”:** you used the Mac command. Follow the Windows download steps above.
+- **Missing model or DLL:** extract the whole package and keep its files together. Do not launch the executable inside a ZIP or copy only Parrot.exe.
+- **Microphone unavailable:** check Windows microphone access for desktop apps and your default input device.
+- **Nothing pasted:** wait for the copied status, then press Ctrl+V yourself.
+- **Transcription stalls while cancelling:** quit and reopen Parrot. Cancellation prevents delivery but cannot interrupt the current native inference call.
+
+For a diagnostic, run this from the extracted app folder in PowerShell:
+
+```powershell
+.\Parrot.exe --doctor
+```
+
+Doctor checks initialization, not successful live dictation. See the [Windows guide](https://github.com/willmather95/parrot/blob/codex/parrot-windows-preview/windows/README.md) and [measured quality checks](https://github.com/willmather95/parrot/blob/codex/parrot-windows-preview/docs/windows-transcription-quality.md) for details.
+
+## macOS: install
 
 Open Terminal, paste this entire line, and press Return:
 
@@ -42,7 +71,9 @@ It also sets the Globe key to "Do Nothing" so macOS does not intercept Parrot's 
 
 **Requires:** macOS 14 or newer on an Apple Silicon Mac (M1 or newer). The first install downloads the on-device speech model and can take a few minutes.
 
-## Install with Codex or Claude Code
+The preview branch also contains a future `--user` installer mode for `~/Applications/Parrot.app`. The current public v0.1.4 installer does not support that mode; use the published Mac instructions above.
+
+## macOS: install with Codex or Claude Code
 
 Parrot is installed on your Mac. Codex and Claude Code are optional local assistants that can run the official installer for you.
 
@@ -80,7 +111,7 @@ These CLI commands require a currently supported Node.js and npm installation. I
 
 You can also use the [Codex app](https://developers.openai.com/codex/app), [Codex CLI](https://developers.openai.com/codex/cli), or [Claude Code](https://code.claude.com/docs/en/getting-started) directly. The agent can guide the install, but you must review and approve the installer command and complete the macOS permission prompts yourself.
 
-## Use it
+## macOS: use it
 
 **Best workflow, especially in Codex:** Use Parrot like a voice clipboard. Press once and let go, speak, press once again and let go, then paste the transcript.
 
@@ -96,7 +127,7 @@ Codex desktop currently does not expose its composer as a focused Accessibility 
 
 Parrot will not start in a password or other secure field. If focus moves into one while Parrot is working, it discards that transcript instead of putting it on the clipboard.
 
-## Troubleshooting
+## macOS: troubleshooting
 
 Run one check that verifies permissions, the real microphone path, and the selected local model:
 
@@ -117,7 +148,7 @@ parrot install --launch-at-login
 
 After a restart, the idle bird should appear in the menu bar. During recording, macOS shows its microphone privacy indicator and Parrot shows the listening pill near the bottom of the active display. If either Parrot surface is missing, reinstalling the login item with the command above reattaches the app to the current GUI session.
 
-## Useful commands
+## macOS: useful commands
 
 ```sh
 parrot doctor                          # check permissions and shortcut settings
@@ -131,7 +162,7 @@ parrot install --uninstall             # stop launching Parrot at login
 
 This is a customized fork of [Digimata's original Parrot project](https://github.com/digimata/parrot). Full credit to Digimata for the foundation.
 
-The fork adds:
+The Mac fork adds:
 
 - A Parakeet model tuned for fast English dictation
 - Safer cursor insertion that verifies the original field before typing
@@ -142,18 +173,33 @@ The fork adds:
 - Launch Services startup so the menu-bar item and overlay follow the active desktop after login
 - A checksum-verified app installer with launch-at-login setup and rollback
 
+The Windows preview adds CPU-based local Parakeet dictation, a global shortcut, visible capture status, protected-focus checks, clipboard delivery, and portable/per-user packaging. Its startup and installation behavior are described separately above.
+
 The stable `com.digimata.parrot` app identity is intentionally preserved so macOS can retain existing Accessibility and microphone permissions across updates.
 
 ## Build from source
+
+### macOS
 
 ```sh
 swift build -c release
 .build/release/parrot --help
 ```
 
-See [docs/architecture.md](docs/architecture.md) for the design and safety model.
+See [docs/architecture.md](docs/architecture.md) for the macOS design and safety model.
 
-## How the release is verified
+### Windows
+
+Use the [Windows preview branch](https://github.com/willmather95/parrot/tree/codex/parrot-windows-preview) on Windows. From the repository root in PowerShell:
+
+```powershell
+.\windows\Build.ps1
+.\windows\Package.ps1
+```
+
+The build downloads pinned, checksum-verified model/runtime dependencies. It uses the in-box .NET Framework compiler. The resulting ZIP includes the model and required libraries. See the [Windows guide](https://github.com/willmather95/parrot/blob/codex/parrot-windows-preview/windows/README.md) for validation and hardware test limits.
+
+## How the macOS release is verified
 
 The installer downloads the latest GitHub release, verifies its published SHA-256 checksum, checks the app signature and stable identity, and installs `/Applications/Parrot.app`. Updates are staged transactionally. If a running replacement cannot become ready, the installer restores the prior app and service.
 
@@ -161,4 +207,4 @@ This is an open-source beta. The release is ad hoc signed and is not Apple-notar
 
 ## License
 
-Parrot remains available under the original project's [MIT License](LICENSE).
+Parrot's source remains available under the original project's [MIT License](LICENSE). The Windows package also includes separately licensed model/runtime components and their license and attribution notices.
