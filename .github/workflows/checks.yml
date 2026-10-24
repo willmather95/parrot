@@ -42,6 +42,12 @@ jobs:
       - name: Verify package and user installation
         shell: powershell
         run: ./windows/Test-Package.ps1
+      - name: Render native branded Windows interface
+        shell: powershell
+        run: |
+          $renders = Join-Path (Get-Location) 'windows/build/ui'
+          $test = Start-Process -FilePath './windows/build/Parrot.exe' -ArgumentList @('--ui-smoke', "`"$renders`"") -Wait -PassThru
+          if ($test.ExitCode -ne 0) { throw "UI smoke failed: $($test.ExitCode)" }
       - name: Measure local transcription quality
         shell: powershell
         run: python ./windows/Test-Quality.py --exe ./windows/build/Parrot.exe
@@ -59,5 +65,13 @@ jobs:
         with:
           name: parrot-windows-quality-evidence
           path: windows/build/quality/quality-results.json
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload native Windows UI evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: parrot-windows-ui
+          path: windows/build/ui/
           if-no-files-found: warn
           retention-days: 14

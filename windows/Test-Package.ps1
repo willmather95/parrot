@@ -55,6 +55,56 @@ try {
     $process = Start-Process -FilePath (Join-Path $destination 'Parrot.exe') -ArgumentList '--self-test' -Wait -PassThru
     if ($process.ExitCode -ne 0) { throw 'Installed binary self-test failed.' }
 
+    # Exercise two real launches using only a process owned by this disposable runner.
+    # No recording is requested. Model initialization may run in the background.
+    if (@(Get-Process -Name Parrot -ErrorAction SilentlyContinue).Count -ne 0) {
+        throw 'Reopen test refuses to interact with an existing Parrot process.'
+    }
+    Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class ParrotReopenWindow {
+    [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr window, int command);
+    [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr window);
+}
+'@
+    $owned = Start-Process -FilePath (Join-Path $destination 'Parrot.exe') -PassThru
+    $second = $null
+    try {
+        $deadline = [DateTime]::UtcNow.AddSeconds(60)
+        $window = [IntPtr]::Zero
+        while ([DateTime]::UtcNow -lt $deadline) {
+            $owned.Refresh()
+            if ($owned.HasExited) { throw 'Owned Parrot exited before showing its window.' }
+            $window = $owned.MainWindowHandle
+            if ($window -ne [IntPtr]::Zero -and [ParrotReopenWindow]::IsWindowVisible($window)) { break }
+            Start-Sleep -Milliseconds 100
+        }
+        if ($window -eq [IntPtr]::Zero -or -not [ParrotReopenWindow]::IsWindowVisible($window)) {
+            throw 'Owned Parrot did not show a visible window.'
+        }
+        $null = [ParrotReopenWindow]::ShowWindow($window, 0)
+        if ([ParrotReopenWindow]::IsWindowVisible($window)) { throw 'Fixture did not hide the owned window.' }
+        $second = Start-Process -FilePath (Join-Path $destination 'Parrot.exe') -PassThru
+        if (-not $second.WaitForExit(15000) -or $second.ExitCode -ne 0) { throw 'Second Parrot launch did not exit successfully.' }
+        $deadline = [DateTime]::UtcNow.AddSeconds(15)
+        while ([DateTime]::UtcNow -lt $deadline -and -not [ParrotReopenWindow]::IsWindowVisible($window)) {
+            Start-Sleep -Milliseconds 100
+        }
+        $owned.Refresh()
+        if ($owned.HasExited -or -not [ParrotReopenWindow]::IsWindowVisible($window)) {
+            throw 'Second launch did not reveal the original owned Parrot window.'
+        }
+        Write-Host 'PASS: second launch reopens the original hidden Parrot window without recording'
+    } finally {
+        foreach ($fixtureProcess in @($second, $owned)) {
+            if ($null -ne $fixtureProcess -and -not $fixtureProcess.HasExited) {
+                Stop-Process -Id $fixtureProcess.Id -Force
+                $null = $fixtureProcess.WaitForExit(15000)
+            }
+        }
+    }
+
     # An unexpected user file must block an update before the folder is moved.
     $personalFile = Join-Path $destination 'personal-fixture.txt'
     Set-Content -LiteralPath $personalFile -Encoding UTF8 -Value 'preserve me'
