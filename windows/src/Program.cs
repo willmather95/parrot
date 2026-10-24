@@ -168,6 +168,13 @@ namespace Parrot.Windows
                 return Doctor.Run();
             }
 
+            if (arguments != null && arguments.Length == 2 && arguments[0] == "--ui-smoke")
+            {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                return MainForm.RunUISmoke(arguments[1]);
+            }
+
             TranscribeFileOptions options;
             if (TranscribeFileOptions.TryParse(arguments, out options))
             {

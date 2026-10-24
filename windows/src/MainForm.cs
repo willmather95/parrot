@@ -1,5 +1,8 @@
 using System;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -35,108 +38,134 @@ namespace Parrot.Windows
         private ParrotController _controller;
         private bool _hotkeyRegistered;
         private bool _quitting;
+        private bool _resourcesReleased;
+        private readonly bool _uiSmoke;
+        private readonly Icon _brandIcon;
+        private readonly Image _brandArtwork;
+        private readonly ContextMenuStrip _trayMenu;
+        private readonly List<Font> _ownedFonts = new List<Font>();
+        private readonly List<Label> _wrappingLabels = new List<Label>();
 
-        internal MainForm()
+        internal MainForm() : this(false) { }
+
+        private MainForm(bool uiSmoke)
         {
+            _uiSmoke = uiSmoke;
             Text = "Parrot for Windows";
             AccessibleName = "Parrot for Windows dictation";
             AccessibleDescription = "Local toggle-to-dictate preview using Parakeet speech recognition.";
+            AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
-            ClientSize = new Size(470, 285);
-            MinimumSize = new Size(430, 275);
+            ClientSize = new Size(560, 460);
+            MinimumSize = new Size(520, 440);
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.Sizable;
             MaximizeBox = false;
+            BackColor = Brand.Background;
+            ForeColor = Brand.Cream;
+            Font = OwnFont(10F, FontStyle.Regular);
+            DoubleBuffered = true;
+            _brandIcon = Brand.LoadIcon();
+            try { _brandArtwork = Brand.LoadArtwork(); }
+            catch { _brandIcon.Dispose(); throw; }
+            Icon = _brandIcon;
 
             TableLayoutPanel layout = new TableLayoutPanel();
             layout.Dock = DockStyle.Fill;
-            layout.AutoSize = true;
-            layout.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            layout.Padding = new Padding(22);
+            layout.AutoScroll = true;
+            layout.Padding = new Padding(28, 24, 28, 24);
             layout.ColumnCount = 1;
             layout.RowCount = 6;
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            for (int row = 0; row < 6; row++) layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            Label heading = new Label();
-            heading.Text = "Parrot for Windows";
+            TableLayoutPanel heading = new TableLayoutPanel();
             heading.AutoSize = true;
-            heading.Margin = new Padding(0, 0, 0, 6);
-            heading.Font = new Font(
-                SystemFonts.MessageBoxFont.FontFamily,
-                SystemFonts.MessageBoxFont.Size + 3F,
-                FontStyle.Bold);
-            heading.AccessibleName = "Parrot for Windows";
-            layout.Controls.Add(heading);
+            heading.Dock = DockStyle.Top;
+            heading.ColumnCount = 2;
+            heading.RowCount = 1;
+            heading.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 62F));
+            heading.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            heading.Margin = new Padding(0, 0, 0, 20);
+            PictureBox bird = new PictureBox();
+            bird.Image = _brandArtwork;
+            bird.SizeMode = PictureBoxSizeMode.Zoom;
+            bird.Size = new Size(48, 48);
+            bird.Margin = new Padding(0);
+            bird.TabStop = false;
+            bird.AccessibleName = "Parrot bird";
+            heading.Controls.Add(bird, 0, 0);
+            Label title = MakeLabel("PARROT", 21F, FontStyle.Bold, Brand.Cream);
+            title.Margin = new Padding(0, 3, 0, 0);
+            title.AccessibleName = "Parrot for Windows";
+            heading.Controls.Add(title, 1, 0);
+            layout.Controls.Add(heading, 0, 0);
 
-            Label preview = new Label();
-            preview.Text = "Preview: Parakeet TDT 0.6B v2 int8, processed locally on CPU";
-            preview.AutoSize = true;
-            preview.ForeColor = SystemColors.GrayText;
-            preview.Margin = new Padding(0, 0, 0, 18);
-            layout.Controls.Add(preview);
+            Label preview = MakeLabel("WINDOWS PREVIEW  /  LOCAL DICTATION", 9F, FontStyle.Bold, Brand.Amber);
+            preview.Margin = new Padding(0, 0, 0, 14);
+            layout.Controls.Add(preview, 0, 1);
 
+            TableLayoutPanel statusPanel = new TableLayoutPanel();
+            statusPanel.AutoSize = true;
+            statusPanel.Dock = DockStyle.Top;
+            statusPanel.BackColor = Brand.Panel;
+            statusPanel.Padding = new Padding(20);
+            statusPanel.Margin = new Padding(0, 0, 0, 18);
+            statusPanel.ColumnCount = 1;
+            statusPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             _statusLabel = new AccessibleStatusLabel();
-            _statusLabel.Text = "Ready";
             _statusLabel.AutoSize = true;
-            _statusLabel.Font = new Font(
-                SystemFonts.MessageBoxFont.FontFamily,
-                SystemFonts.MessageBoxFont.Size + 1F,
-                FontStyle.Bold);
-            _statusLabel.AccessibleName = "Dictation status";
-            _statusLabel.Margin = new Padding(0, 0, 0, 5);
-            layout.Controls.Add(_statusLabel);
-
-            _detailLabel = new Label();
-            _detailLabel.Text = "Nothing is recording.";
-            _detailLabel.AutoSize = true;
-            _detailLabel.MaximumSize = new Size(410, 0);
+            _statusLabel.Font = OwnFont(20F, FontStyle.Bold);
+            _statusLabel.ForeColor = Brand.Cream;
+            _statusLabel.Margin = new Padding(0, 0, 0, 9);
+            _statusLabel.SetStatus("Ready", "Nothing is recording.");
+            statusPanel.Controls.Add(_statusLabel);
+            _detailLabel = MakeLabel("Nothing is recording. Start when you are ready.", 10F, FontStyle.Regular, Brand.Muted);
             _detailLabel.AccessibleName = "Dictation status details";
-            _detailLabel.Margin = new Padding(0, 0, 0, 18);
-            layout.Controls.Add(_detailLabel);
+            _detailLabel.Margin = new Padding(0);
+            statusPanel.Controls.Add(_detailLabel);
+            statusPanel.SizeChanged += delegate {
+                _detailLabel.MaximumSize = new Size(Math.Max(80, statusPanel.ClientSize.Width - statusPanel.Padding.Horizontal), 0);
+            };
+            layout.Controls.Add(statusPanel, 0, 2);
 
             FlowLayoutPanel actions = new FlowLayoutPanel();
             actions.AutoSize = true;
-            actions.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            actions.Dock = DockStyle.Top;
             actions.WrapContents = true;
             actions.Margin = new Padding(0, 0, 0, 14);
-
-            _toggleButton = new Button();
-            _toggleButton.Text = "Start recording";
-            _toggleButton.AutoSize = true;
-            _toggleButton.MinimumSize = new Size(128, 36);
-            _toggleButton.AccessibleName = "Start recording";
+            _toggleButton = MakeButton("Start recording", "Start recording", true);
+            _toggleButton.TabIndex = 0;
             _toggleButton.Click += delegate { ToggleCapture(); };
             actions.Controls.Add(_toggleButton);
-
-            _cancelButton = new Button();
-            _cancelButton.Text = "Cancel";
-            _cancelButton.AutoSize = true;
-            _cancelButton.MinimumSize = new Size(84, 36);
-            _cancelButton.AccessibleName = "Cancel and discard dictation";
+            _cancelButton = MakeButton("Cancel", "Cancel and discard dictation", false);
+            _cancelButton.TabIndex = 1;
             _cancelButton.Enabled = false;
             _cancelButton.Click += delegate { CancelCapture(); };
             actions.Controls.Add(_cancelButton);
-
-            _quitButton = new Button();
-            _quitButton.Text = "Quit";
-            _quitButton.AutoSize = true;
-            _quitButton.MinimumSize = new Size(76, 36);
-            _quitButton.AccessibleName = "Quit Parrot";
+            _quitButton = MakeButton("Quit", "Quit Parrot", false);
+            _quitButton.TabIndex = 2;
             _quitButton.Click += delegate { QuitApplication(); };
             actions.Controls.Add(_quitButton);
-            layout.Controls.Add(actions);
+            layout.Controls.Add(actions, 0, 3);
 
-            Label shortcut = new Label();
-            shortcut.Text = "Shortcut: Ctrl+Alt+Space toggles recording. Esc cancels.";
-            shortcut.AutoSize = true;
-            shortcut.ForeColor = SystemColors.GrayText;
-            shortcut.Margin = new Padding(0);
-            layout.Controls.Add(shortcut);
-
+            Label shortcut = MakeLabel("Ctrl+Alt+Space toggles recording. Esc cancels.", 9F, FontStyle.Regular, Brand.Cream);
+            shortcut.Margin = new Padding(0, 0, 0, 14);
+            layout.Controls.Add(shortcut, 0, 4);
+            _wrappingLabels.Add(shortcut);
+            Label processing = MakeLabel("Parakeet TDT 0.6B v2 int8 · CPU processing on this PC.\nClosing the window keeps Parrot in the tray. Use Quit to exit.", 9F, FontStyle.Regular, Brand.Muted);
+            processing.Margin = new Padding(0);
+            layout.Controls.Add(processing, 0, 5);
+            _wrappingLabels.Add(processing);
+            layout.SizeChanged += delegate {
+                int width = Math.Max(100, layout.ClientSize.Width - layout.Padding.Horizontal - SystemInformation.VerticalScrollBarWidth);
+                foreach (Label label in _wrappingLabels) label.MaximumSize = new Size(width, 0);
+            };
             Controls.Add(layout);
             AcceptButton = _toggleButton;
 
             ContextMenuStrip trayMenu = new ContextMenuStrip();
+            _trayMenu = trayMenu;
             ToolStripMenuItem showItem = new ToolStripMenuItem("Show Parrot");
             showItem.Click += delegate { ShowAndActivate(); };
             trayMenu.Items.Add(showItem);
@@ -153,10 +182,10 @@ namespace Parrot.Windows
             trayMenu.Items.Add(quitItem);
 
             _trayIcon = new NotifyIcon();
-            _trayIcon.Icon = SystemIcons.Application;
+            _trayIcon.Icon = _brandIcon;
             _trayIcon.Text = "Parrot for Windows: Ready";
             _trayIcon.ContextMenuStrip = trayMenu;
-            _trayIcon.Visible = true;
+            _trayIcon.Visible = !uiSmoke;
             _trayIcon.DoubleClick += delegate { ShowAndActivate(); };
 
             Load += HandleLoad;
@@ -165,6 +194,7 @@ namespace Parrot.Windows
 
         private void HandleLoad(object sender, EventArgs eventArgs)
         {
+            if (_uiSmoke) return;
             SynchronizationContext context = SynchronizationContext.Current;
             if (context == null)
             {
@@ -219,6 +249,8 @@ namespace Parrot.Windows
         {
             string status = PhaseText(phase);
             _statusLabel.SetStatus(status, detail);
+            _statusLabel.ForeColor = phase == CapturePhase.Listening || phase == CapturePhase.Blocked
+                ? Brand.Red : Brand.Cream;
             _detailLabel.Text = detail;
             _toggleButton.Enabled = toggleEnabled;
             _cancelButton.Enabled = cancelEnabled;
@@ -230,6 +262,8 @@ namespace Parrot.Windows
             _toggleButton.AccessibleName = _toggleButton.Text;
             _trayToggleItem.Text = listening ? "Stop recording" : "Start recording";
             _trayIcon.Text = "Parrot for Windows: " + status;
+
+            if (_uiSmoke) return;
 
             if (phase == CapturePhase.Listening || phase == CapturePhase.Finishing)
             {
@@ -324,6 +358,8 @@ namespace Parrot.Windows
 
         private void ReleaseResources()
         {
+            if (_resourcesReleased) return;
+            _resourcesReleased = true;
             if (_hotkeyRegistered && IsHandleCreated)
             {
                 NativeMethods.UnregisterHotKey(Handle, HotkeyId);
@@ -336,8 +372,116 @@ namespace Parrot.Windows
                 _controller = null;
             }
 
-            _trayIcon.Visible = false;
-            _trayIcon.Dispose();
+            if (_trayIcon != null)
+            {
+                _trayIcon.Visible = false;
+                _trayIcon.Dispose();
+            }
+        }
+
+        private Font OwnFont(float size, FontStyle style)
+        {
+            Font font = new Font("Segoe UI", size, style, GraphicsUnit.Point);
+            _ownedFonts.Add(font);
+            return font;
+        }
+
+        private Label MakeLabel(string text, float size, FontStyle style, Color color)
+        {
+            Label label = new Label();
+            label.Text = text;
+            label.AutoSize = true;
+            label.Font = OwnFont(size, style);
+            label.ForeColor = color;
+            label.UseMnemonic = false;
+            return label;
+        }
+
+        private Button MakeButton(string text, string accessibleName, bool primary)
+        {
+            Button button = new Button();
+            button.Text = text;
+            button.AccessibleName = accessibleName;
+            button.AutoSize = true;
+            button.MinimumSize = new Size(primary ? 154 : 82, 40);
+            button.Padding = new Padding(10, 5, 10, 5);
+            button.Margin = new Padding(0, 0, 10, 0);
+            button.FlatStyle = FlatStyle.Flat;
+            button.FlatAppearance.BorderColor = primary ? Brand.Amber : Brand.Line;
+            button.FlatAppearance.MouseOverBackColor = primary ? Brand.Cream : Brand.Raised;
+            button.FlatAppearance.MouseDownBackColor = primary ? Brand.Muted : Brand.Line;
+            button.BackColor = primary ? Brand.Amber : Brand.Panel;
+            button.ForeColor = primary
+                ? (SystemInformation.HighContrast ? SystemColors.HighlightText : Brand.Background)
+                : Brand.Cream;
+            button.UseVisualStyleBackColor = false;
+            return button;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                ReleaseResources();
+                if (_trayMenu != null) _trayMenu.Dispose();
+            }
+            base.Dispose(disposing);
+            if (disposing)
+            {
+                if (_brandArtwork != null) _brandArtwork.Dispose();
+                if (_brandIcon != null) _brandIcon.Dispose();
+                foreach (Font font in _ownedFonts) font.Dispose();
+                _ownedFonts.Clear();
+            }
+        }
+
+        // A render-only path. No load callback, tray registration, hotkey, model or audio.
+        internal static int RunUISmoke(string path)
+        {
+            Directory.CreateDirectory(path);
+            CapturePhase[] phases = { CapturePhase.Ready, CapturePhase.Listening, CapturePhase.Finishing, CapturePhase.Blocked };
+            string[] details = {
+                "Nothing is recording. Start when you are ready.",
+                "Recording on this PC. Press Ctrl+Alt+Space to finish.",
+                "Processing your speech on this PC. You can still cancel.",
+                "Ctrl+Alt+Space is unavailable. Use Start recording or close the conflicting app."
+            };
+            using (MainForm form = new MainForm(true))
+            {
+                form.CreateControl();
+                for (int index = 0; index < phases.Length; index++)
+                {
+                    form.SetState(phases[index], details[index], index != 2, index == 1 || index == 2);
+                    form.PerformLayout();
+                    form.SaveSmokeBitmap(Path.Combine(path, PhaseText(phases[index]).ToLowerInvariant() + ".png"));
+                }
+                form.ClientSize = new Size(504, 401);
+                form.PerformLayout();
+                form.SaveSmokeBitmap(Path.Combine(path, "minimum.png"));
+                if (form._controller != null || form._hotkeyRegistered || form._trayIcon.Visible)
+                    throw new InvalidOperationException("UI smoke unexpectedly initialized runtime resources.");
+            }
+            foreach (float factor in new float[] { 1.5F, 2F })
+            {
+                using (MainForm form = new MainForm(true))
+                {
+                    form.AutoScaleMode = AutoScaleMode.None;
+                    form.Scale(new SizeF(factor, factor));
+                    form.CreateControl();
+                    form.PerformLayout();
+                    form.SaveSmokeBitmap(Path.Combine(path, "layout-scale-" + ((int)(factor * 100)).ToString() + ".png"));
+                }
+            }
+            return 0;
+        }
+
+        private void SaveSmokeBitmap(string path)
+        {
+            using (Bitmap bitmap = new Bitmap(Width, Height))
+            {
+                DrawToBitmap(bitmap, new Rectangle(0, 0, Width, Height));
+                bitmap.Save(path, ImageFormat.Png);
+            }
         }
 
         private static string PhaseText(CapturePhase phase)

@@ -18,6 +18,11 @@ $references = @('System.dll', 'System.Core.dll', 'System.Drawing.dll', 'System.W
 $references += @('UIAutomationClient.dll', 'UIAutomationTypes.dll', 'WindowsBase.dll' | ForEach-Object { Join-Path $framework "WPF\$_" })
 $output = Join-Path $buildRoot 'Parrot.exe'
 $arguments = @('/nologo', '/target:winexe', '/platform:x64', '/optimize+', '/warnaserror+', '/main:Parrot.Windows.Program', "/out:$output", "/win32manifest:$(Join-Path $PSScriptRoot 'src\app.manifest')")
+$brandIcon = Join-Path $PSScriptRoot 'assets\Parrot.ico'
+$brandArtwork = Join-Path $PSScriptRoot 'assets\Parrot.png'
+if (-not (Test-Path -LiteralPath $brandIcon -PathType Leaf)) { throw 'The Parrot application icon is missing.' }
+if (-not (Test-Path -LiteralPath $brandArtwork -PathType Leaf)) { throw 'The Parrot brand artwork is missing.' }
+$arguments += @("/win32icon:$brandIcon", "/resource:$brandIcon,Parrot.Windows.BrandIcon", "/resource:$brandArtwork,Parrot.Windows.BrandArtwork")
 $arguments += @($references | ForEach-Object { "/reference:$_" })
 $arguments += $sources
 & $compiler @arguments
