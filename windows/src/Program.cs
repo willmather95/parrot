@@ -190,35 +190,30 @@ namespace Parrot.Windows
                 return 64;
             }
 
-            bool createdNew = false;
-            Mutex instanceMutex = null;
-            try
+            using (EventWaitHandle show = new EventWaitHandle(false, EventResetMode.AutoReset, @"Local\Parrot.Windows.Show"))
             {
-                instanceMutex = new Mutex(true, @"Local\Parrot.Windows.SingleInstance", out createdNew);
-                if (!createdNew)
+                bool createdNew = false;
+                using (Mutex instanceMutex = new Mutex(true, @"Local\Parrot.Windows.SingleInstance", out createdNew))
                 {
-                    MessageBox.Show(
-                        "Parrot for Windows is already running. Open it from the notification area.",
-                        "Parrot for Windows",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information);
-                    return 3;
-                }
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new MainForm());
-                return 0;
-            }
-            finally
-            {
-                if (instanceMutex != null)
-                {
-                    if (createdNew)
+                    if (!createdNew) { show.Set(); return 0; }
+                    try
                     {
-                        try { instanceMutex.ReleaseMutex(); }
-                        catch (ApplicationException) { }
+                        Application.EnableVisualStyles();
+                        Application.SetCompatibleTextRenderingDefault(false);
+                        using (MainForm form = new MainForm())
+                        {
+                            if (form.Handle == IntPtr.Zero) throw new InvalidOperationException("Parrot window unavailable.");
+                            RegisteredWaitHandle wait = ThreadPool.RegisterWaitForSingleObject(show, delegate {
+                                if (!form.IsDisposed && form.IsHandleCreated)
+                                    try { form.BeginInvoke(new Action(delegate { if (!form.IsDisposed) form.ShowAndActivate(); })); }
+                                    catch (InvalidOperationException) { }
+                            }, null, Timeout.Infinite, false);
+                            try { Application.Run(form); }
+                            finally { wait.Unregister(null); }
+                        }
+                        return 0;
                     }
-                    instanceMutex.Dispose();
+                    finally { instanceMutex.ReleaseMutex(); }
                 }
             }
         }

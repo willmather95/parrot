@@ -321,7 +321,7 @@ namespace Parrot.Windows
                     | NativeMethods.SwpShowWindow);
         }
 
-        private void ShowAndActivate()
+        internal void ShowAndActivate()
         {
             Show();
             WindowState = FormWindowState.Normal;
@@ -435,7 +435,7 @@ namespace Parrot.Windows
             }
         }
 
-        // A render-only path. No load callback, tray registration, hotkey, model or audio.
+        // A render-only path. Load is guarded: no visible tray, hotkey, model or audio.
         internal static int RunUISmoke(string path)
         {
             Directory.CreateDirectory(path);
@@ -449,6 +449,9 @@ namespace Parrot.Windows
             using (MainForm form = new MainForm(true))
             {
                 form.CreateControl();
+                form.Show();
+                Application.DoEvents();
+                if (!form._statusLabel.Visible) throw new InvalidOperationException("Native render observer has hidden controls.");
                 for (int index = 0; index < phases.Length; index++)
                 {
                     form.SetState(phases[index], details[index], index != 2, index == 1 || index == 2);
@@ -468,6 +471,8 @@ namespace Parrot.Windows
                     form.AutoScaleMode = AutoScaleMode.None;
                     form.Scale(new SizeF(factor, factor));
                     form.CreateControl();
+                    form.Show();
+                    Application.DoEvents();
                     form.PerformLayout();
                     form.SaveSmokeBitmap(Path.Combine(path, "layout-scale-" + ((int)(factor * 100)).ToString() + ".png"));
                 }
