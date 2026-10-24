@@ -4,6 +4,12 @@ Fast, private voice-to-text for Windows and Apple Silicon Macs. Press one shortc
 
 Audio and transcription stay on your computer. Parrot requires no transcription account, subscription, or cloud API. GitHub sign-in is needed to download the Windows preview artifact.
 
+## Parrot Studio source candidate
+
+The current source adds a native Studio window from the Mac menu-bar bird, with clearer recording state, searchable local wording replacements, exact full-utterance snippets and keyboard navigation. Charcoal, cream and amber give it a restrained vintage instrument style.
+
+These are source changes. The existing downloadable v0.1.4 release and installed app are not replaced by this commit. Build the separate [safe UI preview](preview/README.md) to explore the new interface without loading a speech model or using your microphone. See [Studio controls and limits](docs/studio-ui.md).
+
 ## Choose your platform
 
 | Platform | Status | Setup | Dictate / paste |

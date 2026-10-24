@@ -15,6 +15,7 @@ final class RecordingOverlay {
     private let model = OverlayModel()
 
     func show(_ state: State) {
+        if state == .hidden { hide(); return }
         if state == .recording {
             model.resetLevels()
         }
@@ -43,10 +44,15 @@ final class RecordingOverlay {
         }
     }
 
+    /// The capture owner may supply elapsed time. The overlay does not start a timer.
+    func setElapsedSeconds(_ seconds: TimeInterval?) {
+        model.elapsedSeconds = seconds
+    }
+
     private func ensureWindow() {
         if window != nil { return }
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 196, height: 44),
+            contentRect: NSRect(x: 0, y: 0, width: 276, height: 56),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -103,40 +109,39 @@ func announceParrotState(_ text: String) {
 @MainActor
 final class OverlayModel: ObservableObject {
     static let barCount = 6
-    /// Per-bar height multiplier — center bars peak higher than edge bars.
+    /// Per-bar height multiplier - center bars peak higher than edge bars.
     private static let envelope: [Float] = [0.55, 0.85, 1.0, 1.0, 0.85, 0.55]
 
     @Published var state: RecordingOverlay.State = .hidden
     @Published var levels: [Float] = Array(repeating: 0, count: barCount)
+    @Published var elapsedSeconds: TimeInterval?
 
     func pushLevel(_ level: Float) {
         let shaped = min(1.0, sqrt(max(0, level)) * 3.4)
         var next = [Float]()
         next.reserveCapacity(Self.barCount)
-        for i in 0..<Self.barCount {
-            // Small per-bar jitter so the bars don't all move in lockstep.
-            let jitter = Float.random(in: 0.78...1.0)
-            next.append(shaped * Self.envelope[i] * jitter)
-        }
+        for i in 0..<Self.barCount { next.append(shaped * Self.envelope[i]) }
         levels = next
     }
 
     func resetLevels() {
         levels = Array(repeating: 0, count: Self.barCount)
+        elapsedSeconds = nil
     }
 }
 
-private struct OverlayPill: View {
+struct OverlayPill: View {
     @ObservedObject var model: OverlayModel
 
     var body: some View {
         content
-            .padding(.horizontal, 14)
-            .padding(.vertical, 9)
+            .padding(.horizontal, 15)
+            .padding(.vertical, 10)
             .background(
-                Capsule()
-                    .fill(Color(red: 16/255, green: 18/255, blue: 18/255))
+                RoundedRectangle(cornerRadius: 15)
+                    .fill(ParrotPalette.background)
             )
+            .overlay(RoundedRectangle(cornerRadius: 15).stroke(ParrotPalette.line))
             .accessibilityLabel(accessibilityLabel)
     }
 
@@ -146,25 +151,49 @@ private struct OverlayPill: View {
         case .hidden:
             EmptyView()
         case .recording:
-            HStack(spacing: 10) {
+            HStack(spacing: 12) {
+                Circle()
+                    .fill(ParrotPalette.red)
+                    .frame(width: 7, height: 7)
+                    .accessibilityHidden(true)
                 Waveform(levels: model.levels)
-                    .frame(width: 54, height: 22)
-                Text("⌃ + 🌐 to stop")
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.82))
-                    .lineLimit(1)
+                    .frame(width: 43, height: 25)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("RECORDING")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .tracking(0.9)
+                        .foregroundStyle(ParrotPalette.cream)
+                    Text("Control + Fn to stop")
+                        .font(.system(size: 10))
+                        .foregroundStyle(ParrotPalette.muted)
+                }
+                Spacer(minLength: 0)
+                if let seconds = model.elapsedSeconds {
+                    Text(String(format: "%02d:%02d", max(0, Int(seconds)) / 60, max(0, Int(seconds)) % 60))
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundStyle(ParrotPalette.amber)
+                }
             }
-            .frame(width: 168, height: 22)
+            .frame(width: 246, height: 36)
         case .transcribing:
-            HStack(spacing: 8) {
-                ProgressView()
-                    .controlSize(.small)
-                    .scaleEffect(0.8)
-                Text("Transcribing…")
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.82))
+            HStack(spacing: 12) {
+                Image(systemName: "waveform.path")
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(ParrotPalette.amber)
+                    .frame(width: 50)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("TRANSCRIBING")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .tracking(0.9)
+                        .foregroundStyle(ParrotPalette.cream)
+                    Text("Processing on this Mac")
+                        .font(.system(size: 10))
+                        .foregroundStyle(ParrotPalette.muted)
+                }
+                Spacer(minLength: 0)
             }
-            .frame(width: 168, height: 22)
+            .frame(width: 246, height: 36)
         }
     }
 
@@ -182,19 +211,19 @@ private struct OverlayPill: View {
 
 private struct Waveform: View {
     let levels: [Float]
-    private let color = Color(red: 181/255.0, green: 209/255.0, blue: 255/255.0)
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(alignment: .center, spacing: 4) {
             ForEach(Array(levels.enumerated()), id: \.offset) { _, level in
                 Capsule()
-                    .fill(color)
-                    .frame(width: 2.5)
+                    .fill(ParrotPalette.amber)
+                    .frame(width: 3)
                     .frame(maxHeight: .infinity)
                     .scaleEffect(y: max(0.10, CGFloat(level)), anchor: .center)
                     .animation(reduceMotion ? nil : .easeOut(duration: 0.09), value: level)
             }
         }
+        .accessibilityHidden(true)
     }
 }

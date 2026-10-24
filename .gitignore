@@ -11,3 +11,7 @@
 dist/
 windows/build/
 windows/__pycache__/
+
+# Private local evidence and generated previews
+evidence/
+preview/.build/

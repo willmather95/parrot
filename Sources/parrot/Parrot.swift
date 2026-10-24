@@ -95,9 +95,6 @@ struct Run: ParsableCommand {
         let capture = AudioCapture()
         let dumpWav = self.dumpWav
         let overlay: RecordingOverlay? = noOverlay ? nil : MainActor.assumeIsolated { RecordingOverlay() }
-        if let overlay {
-            capture.onLevel = { level in overlay.pushLevel(level) }
-        }
         if let loginQuitToken,
            ParrotLoginService.validatedToken(loginQuitToken) == nil
         {
@@ -119,6 +116,24 @@ struct Run: ParsableCommand {
         }
         let menuBar = MainActor.assumeIsolated {
             MenuBarController(modelID: chosenModel.id, onQuit: requestQuit)
+        }
+        MainActor.assumeIsolated {
+            var loadedPreferences = DictationPreferences.empty
+            menuBar.configurePreferences(
+                load: {
+                    let current = try ParrotSettings.dictationPreferences()
+                    loadedPreferences = current
+                    return current
+                },
+                save: { next in
+                    try ParrotSettings.saveDictationPreferences(next, expecting: loadedPreferences)
+                    loadedPreferences = next
+                }
+            )
+        }
+        capture.onLevel = { level in
+            overlay?.pushLevel(level)
+            menuBar.pushLevel(level)
         }
         guard MainActor.assumeIsolated({ menuBar.isReady }) else {
             FileHandle.standardError.write(Data("ui startup failed: menu bar status item unavailable\n".utf8))
@@ -222,6 +237,9 @@ struct Run: ParsableCommand {
                 }
                 return
             }
+            // Freeze local rules for this utterance. A failed read blocks delivery,
+            // rather than silently ignoring the user's configured replacements.
+            let phraseSettings = Result { try ParrotSettings.dictationPreferences() }
             let queuedAt = ProcessInfo.processInfo.systemUptime
             transcriptionQueue.enqueue {
                 let started = ProcessInfo.processInfo.systemUptime
@@ -231,6 +249,7 @@ struct Run: ParsableCommand {
                         try await transcriber.transcribe(samples)
                     }
                     guard !text.isEmpty else { throw TranscriberError.emptyResult }
+                    let deliveryText = try DictationTextRules.apply(text, preferences: phraseSettings.get())
                     let elapsed = ProcessInfo.processInfo.systemUptime - started
                     FileHandle.standardError.write(Data(
                         String(
@@ -249,7 +268,7 @@ struct Run: ParsableCommand {
                             deliveryGuard.uiGeneration
                         )
                         let delivery = TextInjector.deliver(
-                            text,
+                            deliveryText,
                             deliveryGuard: deliveryGuard
                         )
                         switch delivery {
@@ -289,13 +308,22 @@ struct Run: ParsableCommand {
                         deliveryGuards.remove(deliveryGuard)
                     }
                 } catch {
-                    FileHandle.standardError.write(Data("transcription failed: \(error)\n".utf8))
+                    let settingsFailed = error is ParrotSettingsError || error is DictationPreferencesError
+                    // No transcript or user-entered rule text belongs in diagnostic logs.
+                    FileHandle.standardError.write(Data(
+                        (settingsFailed ? "phrase settings unavailable · transcript not delivered\n"
+                         : "transcription failed: \(error)\n").utf8
+                    ))
                     await MainActor.run {
                         if interactionGenerations.isLatest(deliveryGuard.uiGeneration) {
                             overlay?.hide()
-                            menuBar.setCaptureError("transcription failed · try again")
+                            menuBar.setCaptureError(settingsFailed
+                                ? "phrase settings unavailable · open Studio"
+                                : "transcription failed · try again")
                         } else {
-                            announceParrotState("An earlier Parrot dictation failed to transcribe.")
+                            announceParrotState(settingsFailed
+                                ? "An earlier Parrot dictation was not delivered because phrase settings could not be read."
+                                : "An earlier Parrot dictation failed to transcribe.")
                         }
                         // Older work must still fail visibly/audibly without
                         // overwriting the state of a newer recording.
