@@ -4,14 +4,47 @@ import AppKit
 import SwiftUI
 
 enum ParrotPalette {
-    static let background = Color(red: 21/255, green: 25/255, blue: 24/255)
-    static let panel = Color(red: 31/255, green: 36/255, blue: 34/255)
-    static let raised = Color(red: 39/255, green: 45/255, blue: 42/255)
-    static let line = Color(red: 77/255, green: 83/255, blue: 75/255)
+    static let background = Color(red: 24/255, green: 23/255, blue: 20/255)
+    static let panel = Color(red: 32/255, green: 31/255, blue: 27/255)
+    static let raised = Color(red: 43/255, green: 41/255, blue: 35/255)
+    static let line = Color(red: 82/255, green: 76/255, blue: 64/255)
     static let cream = Color(red: 238/255, green: 232/255, blue: 213/255)
-    static let muted = Color(red: 177/255, green: 181/255, blue: 168/255)
+    static let muted = Color(red: 183/255, green: 175/255, blue: 154/255)
     static let amber = Color(red: 240/255, green: 174/255, blue: 82/255)
     static let red = Color(red: 226/255, green: 117/255, blue: 100/255)
+}
+
+/// One compact silhouette for the menu bar and Studio; the app icon uses the same bird.
+@MainActor
+enum ParrotBrand {
+    static let mark: NSImage = {
+        let svg = """
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="black">
+        <path d="M2 9C5 3 14 1 20 6C13 4 10 9 2 9Z"/>
+        <path d="M2 14C6 13 9 10 10 8C10 12 8 15 2 15Z"/>
+        <path d="M2 18C6 17 8 15 9 13C10 17 7 19 2 19Z"/>
+        <path d="M3 22C4 20 7 21 9 20C8 23 5 23 3 23Z"/>
+        <path fill-rule="evenodd" d="M12 8C14 6 17 6 19 7C17 8 16 10 16 12C16 14 19 16 19 18C19 20 17 22 15 23H9C13 21 15 19 12 16C9 13 10 10 12 8Z M15.8 8.8a1.15 1.15 0 1 0-2.3 0a1.15 1.15 0 1 0 2.3 0Z"/>
+        <path d="M20 7C24 9 24 14 21 17C22 13 19 13 17.5 12C18 10 19 8 20 7Z"/>
+        </svg>
+        """
+        let image: NSImage
+        if let decoded = NSImage(data: Data(svg.utf8)) {
+            image = decoded
+        } else {
+            fputs("parrot: bird artwork unavailable; using P lettermark\n", stderr)
+            image = NSImage(size: NSSize(width: 24, height: 24), flipped: false) { rect in
+                ("P" as NSString).draw(in: rect, withAttributes: [
+                    .font: NSFont.monospacedSystemFont(ofSize: 20, weight: .bold),
+                    .foregroundColor: NSColor.black
+                ])
+                return true
+            }
+        }
+        image.size = NSSize(width: 18, height: 18)
+        image.isTemplate = true
+        return image
+    }()
 }
 
 enum StudioRunState: Equatable {
@@ -203,13 +236,14 @@ struct StudioView: View {
         VStack(alignment: .leading, spacing: 0) {
             if !horizontal {
             HStack(alignment: .center, spacing: 10) {
-                Image(systemName: "bird.fill")
-                    .font(.system(size: 24, weight: .medium))
+                Image(nsImage: ParrotBrand.mark)
+                    .resizable().renderingMode(.template).scaledToFit()
+                    .frame(width: 30, height: 30)
                     .foregroundStyle(ParrotPalette.amber)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 1) {
                     Text("PARROT")
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .font(.system(size: 15, weight: .heavy, design: .monospaced))
                         .tracking(2)
                     Text("STUDIO / LOCAL")
                         .font(.system(size: 9, weight: .medium, design: .monospaced))

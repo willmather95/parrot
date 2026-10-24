@@ -1,12 +1,14 @@
 # Parrot
 
+<img src="AppBundle/ParrotAppIcon.png" width="112" height="112" alt="Parrot: an ivory and amber bird with a burnt-orange beak on charcoal">
+
 Fast, private voice-to-text for Windows and Apple Silicon Macs. Press one shortcut, speak naturally, and get clean text ready to paste.
 
 Audio and transcription stay on your computer. Parrot requires no transcription account, subscription, or cloud API. GitHub sign-in is needed to download the Windows preview artifact.
 
 ## Parrot Studio source candidate
 
-The current source adds a native Studio window from the Mac menu-bar bird, with clearer recording state, searchable local wording replacements, exact full-utterance snippets and keyboard navigation. Charcoal, cream and amber give it a restrained vintage instrument style.
+The current source adds a native Studio window from the Mac menu-bar bird, with clearer recording state, searchable local wording replacements, exact full-utterance snippets and keyboard navigation. Warm charcoal, ivory and amber give it a restrained 1980s instrument style. The redesigned parrot icon, native menu-bar mark and Studio wordmark share the same identity. See the [brand guide](docs/branding.md).
 
 These are source changes. The existing downloadable v0.1.4 release and installed app are not replaced by this commit. Build the separate [safe UI preview](preview/README.md) to explore the new interface without loading a speech model or using your microphone. See [Studio controls and limits](docs/studio-ui.md).
 
