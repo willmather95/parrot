@@ -5,6 +5,7 @@ repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 app_dir="$repo_dir/preview/.build/ParrotRetroPreview.app"
 mkdir -p "$app_dir/Contents/MacOS"
 cp "$repo_dir/preview/Info.plist" "$app_dir/Contents/Info.plist"
+bash "$repo_dir/scripts/build-app-icon.sh" "$repo_dir/AppBundle/ParrotAppIcon.png" "$app_dir/Contents/Resources/Parrot.icns"
 
 swiftc -swift-version 5 -warnings-as-errors -target arm64-apple-macos14.0 \
   "$repo_dir/Sources/parrot/Models/DictationPreferences.swift" \

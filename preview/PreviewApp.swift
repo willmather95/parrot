@@ -16,6 +16,10 @@ struct ParrotRetroPreview {
 
         let app = NSApplication.shared
         app.setActivationPolicy(.regular)
+        if let iconURL = Bundle.main.url(forResource: "Parrot", withExtension: "icns"),
+           let icon = NSImage(contentsOf: iconURL) {
+            app.applicationIconImage = icon
+        }
 
         let studio = StudioModel(modelID: "Preview model", isPreview: true)
         var stored = DictationPreferences(
