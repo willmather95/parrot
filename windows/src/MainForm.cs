@@ -141,6 +141,7 @@ namespace Parrot.Windows
             _cancelButton = MakeButton("Cancel", "Cancel and discard dictation", false);
             _cancelButton.TabIndex = 1;
             _cancelButton.Enabled = false;
+            _cancelButton.Visible = false;
             _cancelButton.Click += delegate { CancelCapture(); };
             actions.Controls.Add(_cancelButton);
             _quitButton = MakeButton("Quit", "Quit Parrot", false);
@@ -254,6 +255,7 @@ namespace Parrot.Windows
             _detailLabel.Text = detail;
             _toggleButton.Enabled = toggleEnabled;
             _cancelButton.Enabled = cancelEnabled;
+            _cancelButton.Visible = cancelEnabled;
             _trayToggleItem.Enabled = toggleEnabled;
             _trayCancelItem.Enabled = cancelEnabled;
 

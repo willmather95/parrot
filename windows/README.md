@@ -12,13 +12,9 @@ guaranteed. This is an English dictation model with punctuation and casing.
 **No terminal command is needed for portable use. The root README's macOS
 `curl ... | bash` installer is not for Windows.**
 
-Sign in to GitHub and open the [verified 0.2.0 build](https://github.com/willmather95/parrot/actions/runs/35105457141).
-Scroll to **Artifacts** and download **parrot-windows-x64-preview** (about 481 MB).
-Artifacts expire after 14 days; [check newer preview builds](https://github.com/willmather95/parrot/actions/workflows/checks.yml?query=branch%3Acodex%2Fparrot-windows-preview)
-if it has expired. A public Windows release has not yet been published.
-
-1. On Windows 11 x64, right-click the downloaded ZIP and choose **Extract All**
-   into a folder you own. If that reveals another ZIP, extract it too.
+1. [Download Parrot for Windows](https://github.com/willmather95/parrot/releases/download/windows-v0.2.0/parrot-windows-x64-preview.zip) (about 481 MB). You do not need a GitHub account.
+   On Windows 11 x64 (Intel or AMD), right-click the ZIP and choose **Extract All**
+   into a folder you own.
 2. Open `Parrot.exe`. No Python, Node, .NET SDK, service, or driver installation is
    needed. It uses the .NET Framework already included with Windows 11 and
    app-local inference libraries. Keep the entire extracted folder together,
@@ -30,6 +26,8 @@ if it has expired. A public Windows release has not yet been published.
 
 The first real test should use a harmless sentence. Initializing a recognizer
 or passing the software tests does not prove your microphone works.
+
+Closing the window keeps Parrot in the system tray beside the clock. Open Parrot again to bring its controls back. Choose **Quit** to stop it. It does not start automatically when you sign in. If you change Windows High Contrast while Parrot is running, quit and reopen it to refresh the colors.
 
 ## Optional per-user installation and updates
 

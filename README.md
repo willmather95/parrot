@@ -4,7 +4,7 @@
 
 Fast, private voice-to-text for Windows and Apple Silicon Macs. Press one shortcut, speak naturally, and get clean text ready to paste.
 
-Audio and transcription stay on your computer. Parrot requires no transcription account, subscription, or cloud API. GitHub sign-in is needed to download the Windows preview artifact.
+Audio and transcription stay on your computer. Parrot requires no transcription account, subscription, or cloud API. No GitHub account is needed to download either app.
 
 ## Parrot Studio source candidate
 
@@ -23,17 +23,18 @@ These are source changes. The existing downloadable v0.1.4 release and installed
 
 **No terminal command is needed. Do not run the Mac `curl ... | bash` command on Windows.**
 
-1. Sign in to GitHub and open the [verified Windows 0.2.0 build](https://github.com/willmather95/parrot/actions/runs/35105457141).
-2. Scroll to **Artifacts** and download **parrot-windows-x64-preview** (about 481 MB).
-3. On Windows, right-click the downloaded ZIP and choose **Extract All**. If it contains another ZIP, extract that ZIP too.
-4. Open **Parrot.exe** in the extracted folder. Keep the DLLs and `models` folder alongside it. Wait until Parrot says the local model is ready.
-5. Focus an ordinary text editor. Press **Ctrl+Alt+Space**, speak, and press the shortcut again to stop. When Parrot says the result was copied, press **Ctrl+V**.
+1. [Download Parrot for Windows](https://github.com/willmather95/parrot/releases/download/windows-v0.2.0/parrot-windows-x64-preview.zip) (about 481 MB).
+2. Right-click the downloaded ZIP and choose **Extract All**.
+3. Open **Parrot.exe** in the extracted folder. Keep the DLLs and `models` folder alongside it. Wait until Parrot says the local model is ready.
+4. Click an ordinary text editor. Press **Ctrl+Alt+Space**, speak, and press the shortcut again to stop. When Parrot says the result was copied, press **Ctrl+V**.
 
 The package includes its local Parakeet speech model and CPU runtime. It needs no Python, Node, SDK, GPU driver, Windows speech language pack, or administrator installer. It does not type or paste automatically, and does not register automatic startup.
 
 This is an **unsigned Windows preview**. Company application policies may still block it. Use your employer's approved software process if blocked. Real microphone quality and performance still need a check on your laptop.
 
-GitHub Actions downloads require sign-in and expire after 14 days. If this build's artifact has expired, check [newer preview builds](https://github.com/willmather95/parrot/actions/workflows/checks.yml?query=branch%3Acodex%2Fparrot-windows-preview) for a successful Windows artifact. The **Releases / latest** installer currently installs the Mac version only.
+Closing the window keeps Parrot in the system tray beside the clock. Open Parrot again to bring the controls back. Choose **Quit** to stop it. The Windows preview uses the same charcoal, ivory and amber branding as the Mac Studio candidate.
+
+The **Releases / latest** installer installs the Mac version. Use the Windows download above for a PC.
 
 ### Windows: optional installation and updates
 
@@ -59,7 +60,7 @@ For a diagnostic, run this from the extracted app folder in PowerShell:
 .\Parrot.exe --doctor
 ```
 
-Doctor checks initialization, not successful live dictation. See the [Windows guide](https://github.com/willmather95/parrot/blob/codex/parrot-windows-preview/windows/README.md) and [measured quality checks](https://github.com/willmather95/parrot/blob/codex/parrot-windows-preview/docs/windows-transcription-quality.md) for details.
+Doctor checks initialization, not successful live dictation. See the [Windows guide](https://github.com/willmather95/parrot/blob/codex/parrot-retro-candidate/windows/README.md) and [measured quality checks](https://github.com/willmather95/parrot/blob/codex/parrot-retro-candidate/docs/windows-transcription-quality.md) for details.
 
 ## macOS: install
 
@@ -198,14 +199,14 @@ See [docs/architecture.md](docs/architecture.md) for the macOS design and safety
 
 ### Windows
 
-Use the [Windows preview branch](https://github.com/willmather95/parrot/tree/codex/parrot-windows-preview) on Windows. From the repository root in PowerShell:
+Use the [Windows preview branch](https://github.com/willmather95/parrot/tree/codex/parrot-retro-candidate) on Windows. From the repository root in PowerShell:
 
 ```powershell
 .\windows\Build.ps1
 .\windows\Package.ps1
 ```
 
-The build downloads pinned, checksum-verified model/runtime dependencies. It uses the in-box .NET Framework compiler. The resulting ZIP includes the model and required libraries. See the [Windows guide](https://github.com/willmather95/parrot/blob/codex/parrot-windows-preview/windows/README.md) for validation and hardware test limits.
+The build downloads pinned, checksum-verified model/runtime dependencies. It uses the in-box .NET Framework compiler. The resulting ZIP includes the model and required libraries. See the [Windows guide](https://github.com/willmather95/parrot/blob/codex/parrot-retro-candidate/windows/README.md) for validation and hardware test limits.
 
 ## How the macOS release is verified
 
