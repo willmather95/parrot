@@ -334,6 +334,14 @@ struct Run: ParsableCommand {
             }
         }
 
+        MainActor.assumeIsolated {
+            menuBar.configureDictationToggle { enabled in
+                if toggleState.setEnabled(enabled) {
+                    finishRecording(reason: .userToggle)
+                }
+            }
+        }
+
         do {
             try monitor.start { event in
                 // Focus-invalidating input is recorded synchronously from the
@@ -429,6 +437,8 @@ struct Run: ParsableCommand {
                         }
                         case .stop:
                             finishRecording(reason: .userToggle)
+                        case .ignoredWhilePaused:
+                            break
                         case .ignoredDuringSafetyRearm:
                             FileHandle.standardError.write(Data(
                                 "toggle ignored during safety-limit rearm window\n".utf8

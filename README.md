@@ -6,18 +6,18 @@ Fast, private voice-to-text for Windows and Apple Silicon Macs. Press one shortc
 
 Audio and transcription stay on your computer. Parrot requires no transcription account, subscription, or cloud API. No GitHub account is needed to download either app.
 
-## Parrot Studio source candidate
+## Parrot Studio
 
 The current source adds a native Studio window from the Mac menu-bar bird, with clearer recording state, searchable local wording replacements, exact full-utterance snippets and keyboard navigation. Warm charcoal, ivory and amber give it a restrained 1980s instrument style. The redesigned parrot icon, native menu-bar mark and Studio wordmark share the same identity. See the [brand guide](docs/branding.md).
 
-These are source changes. The existing downloadable v0.1.4 release and installed app are not replaced by this commit. Build the separate [safe UI preview](preview/README.md) to explore the new interface without loading a speech model or using your microphone. See [Studio controls and limits](docs/studio-ui.md).
+Parrot 0.1.5 includes Studio, a menu-bar Dictation switch, an ocean-blue recording indicator and a recording bird icon. Pause dictation without quitting; close Studio and keep the shortcut ready. See [Studio controls and limits](docs/studio-ui.md).
 
 ## Choose your platform
 
 | Platform | Status | Setup | Dictate / paste |
 | --- | --- | --- | --- |
 | Windows 11 x64 | 0.2.0 preview | [Download and extract the Windows package](#windows-download-and-open) | Ctrl+Alt+Space / Ctrl+V |
-| Apple Silicon Mac, macOS 14+ | macOS release | [Run the Mac installer](#macos-install) | Control+Fn/Globe / Command+V |
+| Apple Silicon Mac, macOS 14+ | macOS release | [Install on a Mac](#macos-install) | Control+Fn/Globe / Command+V |
 
 ## Windows: download and open
 
@@ -32,7 +32,7 @@ The package includes its local Parakeet speech model and CPU runtime. It needs n
 
 This is an **unsigned Windows preview**. Company application policies may still block it. Use your employer's approved software process if blocked. Real microphone quality and performance still need a check on your laptop.
 
-Closing the window keeps Parrot in the system tray beside the clock. Open Parrot again to bring the controls back. Choose **Quit** to stop it. The Windows preview uses the same charcoal, ivory and amber branding as the Mac Studio candidate.
+Closing the window keeps Parrot in the system tray beside the clock. Open Parrot again to bring the controls back. Choose **Quit** to stop it. The Windows preview uses the same charcoal, ivory and amber branding as the Mac Studio.
 
 The **Releases / latest** installer installs the Mac version. Use the Windows download above for a PC.
 
@@ -64,6 +64,12 @@ Doctor checks initialization, not successful live dictation. See the [Windows gu
 
 ## macOS: install
 
+[Download Parrot 0.1.5 for Mac](https://github.com/willmather95/parrot/releases/download/v0.1.5/Parrot-0.1.5-Mac.zip)
+
+Already set up Parrot? Quit it from the bird menu, open the ZIP, replace Parrot in **Applications**, and open it again. Keep the same installation location.
+
+**First time using Parrot?** Use the installer below. It guides you through microphone and Accessibility permissions, downloads the speech model and sets up the shortcut. Opening the app ZIP alone does not complete this setup.
+
 Open Terminal, paste this entire line, and press Return:
 
 ```sh
@@ -80,7 +86,7 @@ It also sets the Globe key to "Do Nothing" so macOS does not intercept Parrot's 
 
 **Requires:** macOS 14 or newer on an Apple Silicon Mac (M1 or newer). The first install downloads the on-device speech model and can take a few minutes.
 
-The preview branch also contains a future `--user` installer mode for `~/Applications/Parrot.app`. The current public v0.1.4 installer does not support that mode; use the published Mac instructions above.
+For a per-user installation without administrator access, the installer also supports `--user`. It installs into `~/Applications`. Keep one installation location.
 
 ## macOS: install with Codex or Claude Code
 
@@ -217,3 +223,7 @@ This is an open-source beta. The release is ad hoc signed and is not Apple-notar
 ## License
 
 Parrot's source remains available under the original project's [MIT License](LICENSE). The Windows package also includes separately licensed model/runtime components and their license and attribution notices.
+
+### Pause from the menu bar
+
+Parrot stays in the bird icon at the top of your screen, without a Dock icon. Open its menu and uncheck **Dictation** to pause the shortcut. If you are recording, Parrot stops the microphone and finishes that clip. Check **Dictation** again to resume, then use Control + Fn/Globe when you want to record. Closing Parrot Studio keeps dictation running.

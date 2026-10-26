@@ -10,7 +10,7 @@ Search matches either side of an entry. Command-1/2/3 selects Overview/Vocabular
 
 ## Preview versus installed app
 
-Run `sh preview/build.sh`, then open `preview/.build/ParrotRetroPreview.app`. The separate preview uses synthetic data in memory, no microphone, model, hotkey, clipboard, transcript history or real settings. Its displayed shortcut still belongs to the real dictation app; don't use it as a preview control. The normal source package is the integrated candidate. This source update does not replace an installed app or publish a new downloadable binary release.
+Run `sh preview/build.sh`, then open `preview/.build/ParrotRetroPreview.app`. The separate preview uses synthetic data in memory, no microphone, model, hotkey, clipboard, transcript history or real settings. Its displayed shortcut still belongs to the real dictation app; don't use it as a preview control. Parrot 0.1.5 includes the integrated Studio interface. The preview remains isolated from the installed app.
 
 The minimum 540 x 430 Studio scrolls vertically. Native keyboard and accessibility-tree checks were performed; full VoiceOver speech and daily dictation usability still need real-use testing. No cloud API, telemetry or new dependency was added.
 

@@ -84,6 +84,9 @@ jobs:
           tar -tzf parrot-macos-arm64.tar.gz | grep -Fx 'Parrot.app/Contents/Resources/Parrot.icns'
           shasum -a 256 parrot-macos-arm64.tar.gz > parrot-macos-arm64.tar.gz.sha256
           shasum -a 256 install.sh > install.sh.sha256
+          APP_VERSION=$(./parrot --version)
+          ditto -c -k --sequesterRsrc --keepParent Parrot.app "Parrot-${APP_VERSION}-Mac.zip"
+          shasum -a 256 "Parrot-${APP_VERSION}-Mac.zip" > "Parrot-${APP_VERSION}-Mac.zip.sha256"
           ls -lh
 
       - name: release
@@ -95,5 +98,7 @@ jobs:
             dist/install.sh.sha256
             dist/parrot-macos-arm64.tar.gz
             dist/parrot-macos-arm64.tar.gz.sha256
+            dist/Parrot-*-Mac.zip
+            dist/Parrot-*-Mac.zip.sha256
           generate_release_notes: true
           fail_on_unmatched_files: true

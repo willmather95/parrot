@@ -21,6 +21,45 @@ struct ParrotRetroPreview {
             app.applicationIconImage = icon
         }
 
+        if let markPath = argument("--brand-check", in: arguments) {
+            let bird = ParrotBrand.recordingMark
+            guard !bird.isTemplate, ParrotBrand.mark.isTemplate,
+                  let tiff = bird.tiffRepresentation,
+                  let bitmap = NSBitmapImageRep(data: tiff),
+                  let png = bitmap.representation(using: .png, properties: [:]) else { exit(1) }
+            do { try png.write(to: URL(fileURLWithPath: markPath)) }
+            catch { fputs("Cannot render recording bird.\n", stderr); exit(1) }
+            print("PASS: ocean bird renders; idle bird remains template; no microphone capture")
+            exit(0)
+        }
+
+        if arguments.contains("--menu-check") || arguments.contains("--menu-preview") {
+            app.setActivationPolicy(.accessory)
+            app.finishLaunching()
+            let menu = MenuBarController(modelID: "Preview model", onQuit: { app.terminate(nil) })
+            var changes: [Bool] = []
+            menu.configureDictationToggle { changes.append($0) }
+            if arguments.contains("--menu-check") {
+                DispatchQueue.main.async {
+                    var checks: [String: Bool] = [:]
+                    checks["accessory"] = app.activationPolicy() == .accessory
+                    checks["statusItemAttached"] = menu.isReady
+                    checks["startsEnabled"] = menu.dictationEnabled
+                    menu.toggleDictationClicked()
+                    checks["pauseUpdatesState"] = !menu.dictationEnabled && changes == [false]
+                    menu.setTranscribing()
+                    menu.setRecording(false)
+                    menu.toggleDictationClicked()
+                    checks["resumeOnlySignalsEnable"] = menu.dictationEnabled && changes == [false, true]
+                    let data = try! JSONSerialization.data(withJSONObject: checks, options: [.prettyPrinted, .sortedKeys])
+                    print(String(decoding: data, as: UTF8.self))
+                    exit(checks.values.allSatisfy { $0 } ? 0 : 1)
+                }
+            }
+            withExtendedLifetime(menu) { app.run() }
+            return
+        }
+
         let studio = StudioModel(modelID: "Preview model", isPreview: true)
         var stored = DictationPreferences(
             replacements: [

@@ -11,12 +11,27 @@ enum ParrotPalette {
     static let cream = Color(red: 238/255, green: 232/255, blue: 213/255)
     static let muted = Color(red: 183/255, green: 175/255, blue: 154/255)
     static let amber = Color(red: 240/255, green: 174/255, blue: 82/255)
+    static let recording = Color(red: 72/255, green: 166/255, blue: 224/255)
     static let red = Color(red: 226/255, green: 117/255, blue: 100/255)
 }
 
 /// One compact silhouette for the menu bar and Studio; the app icon uses the same bird.
 @MainActor
 enum ParrotBrand {
+    static let recordingColor = NSColor(ParrotPalette.recording)
+    /// Colored copy leaves the shared template bird intact for idle/system tint.
+    static let recordingMark: NSImage = {
+        let image = NSImage(size: mark.size, flipped: false) { rect in
+            mark.draw(in: rect)
+            recordingColor.setFill()
+            rect.fill(using: .sourceAtop)
+            return true
+        }
+        image.isTemplate = false
+        image.accessibilityDescription = "Parrot recording"
+        return image
+    }()
+
     static let mark: NSImage = {
         let svg = """
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="black">
@@ -48,6 +63,7 @@ enum ParrotBrand {
 }
 
 enum StudioRunState: Equatable {
+    case paused
     case ready
     case recording
     case transcribing
@@ -55,6 +71,7 @@ enum StudioRunState: Equatable {
 
     var title: String {
         switch self {
+        case .paused: "Dictation paused"
         case .ready: "Ready to dictate"
         case .recording: "Recording"
         case .transcribing: "Transcribing"
@@ -64,6 +81,7 @@ enum StudioRunState: Equatable {
 
     var detail: String {
         switch self {
+        case .paused: "Resume Dictation from the menu bar."
         case .ready: "Press Control + Fn/Globe to start."
         case .recording: "Press Control + Fn/Globe to stop."
         case .transcribing: "Processing your speech on this Mac."
@@ -368,7 +386,7 @@ struct StudioView: View {
             VStack(alignment: .leading, spacing: 20) {
                 HStack(alignment: .top, spacing: 16) {
                     Circle()
-                        .fill(model.runState == .recording ? ParrotPalette.red : ParrotPalette.amber)
+                        .fill(model.runState == .recording ? ParrotPalette.recording : ParrotPalette.amber)
                         .frame(width: 9, height: 9)
                         .padding(.top, 9)
                         .accessibilityHidden(true)
@@ -497,7 +515,7 @@ struct LevelMeter: View {
         HStack(alignment: .bottom, spacing: 4) {
             ForEach(Array(levels.enumerated()), id: \.offset) { index, value in
                 RoundedRectangle(cornerRadius: 2)
-                    .fill(index > 14 && value > 0.75 ? ParrotPalette.red : ParrotPalette.amber)
+                    .fill(index > 14 && value > 0.75 ? ParrotPalette.red : active ? ParrotPalette.recording : ParrotPalette.amber)
                     .opacity(active ? 0.5 + Double(value) * 0.5 : 0.2)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)

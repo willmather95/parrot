@@ -153,7 +153,7 @@ struct OverlayPill: View {
         case .recording:
             HStack(spacing: 12) {
                 Circle()
-                    .fill(ParrotPalette.red)
+                    .fill(ParrotPalette.recording)
                     .frame(width: 7, height: 7)
                     .accessibilityHidden(true)
                 Waveform(levels: model.levels)
@@ -217,7 +217,7 @@ private struct Waveform: View {
         HStack(alignment: .center, spacing: 4) {
             ForEach(Array(levels.enumerated()), id: \.offset) { _, level in
                 Capsule()
-                    .fill(ParrotPalette.amber)
+                    .fill(ParrotPalette.recording)
                     .frame(width: 3)
                     .frame(maxHeight: .infinity)
                     .scaleEffect(y: max(0.10, CGFloat(level)), anchor: .center)

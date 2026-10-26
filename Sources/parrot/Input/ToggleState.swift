@@ -35,20 +35,38 @@ final class DictationToggleState: @unchecked Sendable {
         case start
         case stop
         case ignoredDuringSafetyRearm
+        case ignoredWhilePaused
     }
 
     private let lock = NSLock()
     private var recording = false
+    private var enabled = true
+    private var enabledSince = Date.distantPast
     private var restartBlockedUntilObservation = Date.distantPast
 
     func toggle(observedAt: Date = Date()) -> Action {
         lock.lock()
         defer { lock.unlock() }
+        guard enabled, observedAt >= enabledSince else { return .ignoredWhilePaused }
         if !recording, observedAt < restartBlockedUntilObservation {
             return .ignoredDuringSafetyRearm
         }
         recording.toggle()
         return recording ? .start : .stop
+    }
+
+    /// Returns whether the caller must finish an active clip. Old queued
+    /// shortcut observations cannot reopen the microphone after resume.
+    @discardableResult
+    func setEnabled(_ value: Bool, observedAt: Date = Date()) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        guard enabled != value else { return false }
+        enabled = value
+        enabledSince = observedAt
+        guard !value, recording else { return false }
+        recording = false
+        return true
     }
 
     func startFailed() {

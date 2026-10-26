@@ -7,8 +7,11 @@ import SwiftUI
 @MainActor
 final class MenuBarController {
     private let statusItem: NSStatusItem
-    private let modelLabel: NSMenuItem
     private let stateLabel: NSMenuItem
+    private let dictationItem: NSMenuItem
+    private(set) var dictationEnabled = true
+    private var activity: StudioRunState = .ready
+    private var onDictationChanged: (@MainActor (Bool) -> Void)?
     private let modelID: String
     private let onQuit: @MainActor () -> Void
     private let studioModel: StudioModel
@@ -35,9 +38,10 @@ final class MenuBarController {
         stateLabel.isEnabled = false
         menu.addItem(stateLabel)
 
-        modelLabel = NSMenuItem(title: "model: \(modelID)", action: nil, keyEquivalent: "")
-        modelLabel.isEnabled = false
-        menu.addItem(modelLabel)
+        dictationItem = NSMenuItem(title: "Dictation", action: #selector(toggleDictationClicked), keyEquivalent: "")
+        dictationItem.target = self
+        dictationItem.state = .on
+        menu.addItem(dictationItem)
 
         menu.addItem(.separator())
 
@@ -70,14 +74,16 @@ final class MenuBarController {
     }
 
     func setRecording(_ recording: Bool) {
-        studioModel.setState(recording ? .recording : .ready)
+        activity = recording ? .recording : .ready
+        studioModel.setState(!recording && !dictationEnabled ? .paused : activity)
         stateLabel.title = recording
             ? "● recording · press control + fn/globe to stop"
-            : "idle · press control + fn/globe to record"
+            : dictationEnabled ? "Ready · Control + Fn/Globe to record" : "Dictation paused"
         configureButton(recording: recording)
     }
 
     func setTranscribing(_ message: String = "transcribing…") {
+        activity = .transcribing
         studioModel.setState(.transcribing)
         stateLabel.title = message
         guard let button = statusItem.button else { return }
@@ -91,7 +97,8 @@ final class MenuBarController {
     }
 
     func setCaptureError(_ message: String) {
-        studioModel.setState(.error(message))
+        activity = .error(message)
+        studioModel.setState(activity)
         stateLabel.title = message
         guard let button = statusItem.button else { return }
         let image = NSImage(
@@ -125,14 +132,24 @@ final class MenuBarController {
 
     private func configureButton(recording: Bool) {
         guard let button = statusItem.button else { return }
-        let image = recording
-            ? NSImage(systemSymbolName: "mic.fill", accessibilityDescription: "Parrot recording")
-            : ParrotBrand.mark
-        image?.isTemplate = true
-        button.image = image
+        button.image = recording ? ParrotBrand.recordingMark : ParrotBrand.mark
+        button.alphaValue = dictationEnabled ? 1 : 0.5
         button.toolTip = recording
             ? "Parrot is recording · press Control + Fn/Globe to stop"
-            : "Parrot dictation · press Control + Fn/Globe to record"
+            : dictationEnabled ? "Parrot dictation · press Control + Fn/Globe to record" : "Parrot dictation paused"
+    }
+
+    func configureDictationToggle(_ onChange: @escaping @MainActor (Bool) -> Void) {
+        onDictationChanged = onChange
+    }
+
+    @objc func toggleDictationClicked() {
+        guard let onDictationChanged else { return }
+        dictationEnabled.toggle()
+        dictationItem.state = dictationEnabled ? .on : .off
+        // Gate capture first. The callback may move a recording to transcribing.
+        onDictationChanged(dictationEnabled)
+        if activity == .ready { setRecording(false) }
     }
 
     @objc private func quitClicked() {

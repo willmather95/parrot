@@ -26,4 +26,4 @@ Use the existing Mac system fonts. Keep the name readable; decorative labels use
 
 The full-color icon is AppBundle/ParrotAppIcon.png. Its transparent corners are preserved when building the Mac icon. Native menu and Studio marks live in ParrotBrand in StudioView.swift, keeping the executable self-contained.
 
-This source candidate updates branding and the isolated UI preview. Existing downloadable releases and the installed dictation app are separate from the source PR.
+Parrot 0.1.5 includes this branding and Studio interface in the Mac download. The isolated preview remains available for UI development.
