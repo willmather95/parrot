@@ -28,7 +28,7 @@ enum ParrotBrand {
             return true
         }
         image.isTemplate = false
-        image.accessibilityDescription = "Parrot recording"
+        image.accessibilityDescription = "Parrot"
         return image
     }()
 
@@ -386,7 +386,7 @@ struct StudioView: View {
             VStack(alignment: .leading, spacing: 20) {
                 HStack(alignment: .top, spacing: 16) {
                     Circle()
-                        .fill(model.runState == .recording ? ParrotPalette.recording : ParrotPalette.amber)
+                        .fill(model.runState == .recording || model.runState == .transcribing ? ParrotPalette.recording : ParrotPalette.amber)
                         .frame(width: 9, height: 9)
                         .padding(.top, 9)
                         .accessibilityHidden(true)
@@ -403,11 +403,11 @@ struct StudioView: View {
                         Text(Self.duration(seconds))
                             .font(.system(size: 17, weight: .medium, design: .monospaced))
                             .monospacedDigit()
-                            .foregroundStyle(ParrotPalette.amber)
+                            .foregroundStyle(ParrotPalette.recording)
                             .accessibilityLabel("Recording duration \(Int(seconds)) seconds")
                     }
                 }
-                LevelMeter(levels: model.levels, active: model.runState == .recording)
+                LevelMeter(levels: model.levels, active: model.runState == .recording, processing: model.runState == .transcribing)
                     .frame(height: 60)
             }
             .padding(22)
@@ -509,13 +509,14 @@ enum StudioSection: String, CaseIterable, Identifiable {
 struct LevelMeter: View {
     let levels: [Float]
     let active: Bool
+    var processing = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 4) {
             ForEach(Array(levels.enumerated()), id: \.offset) { index, value in
                 RoundedRectangle(cornerRadius: 2)
-                    .fill(index > 14 && value > 0.75 ? ParrotPalette.red : active ? ParrotPalette.recording : ParrotPalette.amber)
+                    .fill(index > 14 && value > 0.75 ? ParrotPalette.red : active || processing ? ParrotPalette.recording : ParrotPalette.amber)
                     .opacity(active ? 0.5 + Double(value) * 0.5 : 0.2)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)

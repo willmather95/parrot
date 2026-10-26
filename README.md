@@ -10,7 +10,7 @@ Audio and transcription stay on your computer. Parrot requires no transcription 
 
 The current source adds a native Studio window from the Mac menu-bar bird, with clearer recording state, searchable local wording replacements, exact full-utterance snippets and keyboard navigation. Warm charcoal, ivory and amber give it a restrained 1980s instrument style. The redesigned parrot icon, native menu-bar mark and Studio wordmark share the same identity. See the [brand guide](docs/branding.md).
 
-Parrot 0.1.5 includes Studio, a menu-bar Dictation switch, an ocean-blue recording indicator and a recording bird icon. Pause dictation without quitting; close Studio and keep the shortcut ready. See [Studio controls and limits](docs/studio-ui.md).
+Parrot 0.1.6 keeps the recording and processing indicators ocean blue, including the menu-bar bird. It includes Studio and a menu-bar Dictation switch. Pause dictation without quitting; close Studio and keep the shortcut ready. See [Studio controls and limits](docs/studio-ui.md).
 
 ## Choose your platform
 
@@ -64,7 +64,7 @@ Doctor checks initialization, not successful live dictation. See the [Windows gu
 
 ## macOS: install
 
-[Download Parrot 0.1.5 for Mac](https://github.com/willmather95/parrot/releases/download/v0.1.5/Parrot-0.1.5-Mac.zip)
+[Download Parrot 0.1.6 for Mac](https://github.com/willmather95/parrot/releases/download/v0.1.6/Parrot-0.1.6-Mac.zip)
 
 Already set up Parrot? Quit it from the bird menu, open the ZIP, replace Parrot in **Applications**, and open it again. Keep the same installation location.
 

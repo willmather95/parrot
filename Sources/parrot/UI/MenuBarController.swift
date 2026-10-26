@@ -87,12 +87,9 @@ final class MenuBarController {
         studioModel.setState(.transcribing)
         stateLabel.title = message
         guard let button = statusItem.button else { return }
-        let image = NSImage(
-            systemSymbolName: "waveform.path",
-            accessibilityDescription: "Parrot transcribing"
-        )
-        image?.isTemplate = true
-        button.image = image
+        button.image = ParrotBrand.recordingMark
+        button.alphaValue = 1
+        button.setAccessibilityLabel("Parrot transcribing")
         button.toolTip = "Parrot is transcribing on this Mac"
     }
 
@@ -107,6 +104,7 @@ final class MenuBarController {
         )
         image?.isTemplate = true
         button.image = image
+        button.setAccessibilityLabel("Parrot needs attention")
         button.toolTip = message
     }
 
@@ -134,6 +132,7 @@ final class MenuBarController {
         guard let button = statusItem.button else { return }
         button.image = recording ? ParrotBrand.recordingMark : ParrotBrand.mark
         button.alphaValue = dictationEnabled ? 1 : 0.5
+        button.setAccessibilityLabel(recording ? "Parrot recording" : dictationEnabled ? "Parrot ready" : "Parrot paused")
         button.toolTip = recording
             ? "Parrot is recording · press Control + Fn/Globe to stop"
             : dictationEnabled ? "Parrot dictation · press Control + Fn/Globe to record" : "Parrot dictation paused"

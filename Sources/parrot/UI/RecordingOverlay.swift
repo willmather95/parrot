@@ -171,7 +171,7 @@ struct OverlayPill: View {
                 if let seconds = model.elapsedSeconds {
                     Text(String(format: "%02d:%02d", max(0, Int(seconds)) / 60, max(0, Int(seconds)) % 60))
                         .font(.system(size: 10, weight: .medium, design: .monospaced))
-                        .foregroundStyle(ParrotPalette.amber)
+                        .foregroundStyle(ParrotPalette.recording)
                 }
             }
             .frame(width: 246, height: 36)
@@ -179,7 +179,7 @@ struct OverlayPill: View {
             HStack(spacing: 12) {
                 Image(systemName: "waveform.path")
                     .font(.system(size: 17, weight: .medium))
-                    .foregroundStyle(ParrotPalette.amber)
+                    .foregroundStyle(ParrotPalette.recording)
                     .frame(width: 50)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
