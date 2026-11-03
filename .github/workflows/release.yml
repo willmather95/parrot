@@ -100,5 +100,15 @@ jobs:
             dist/parrot-macos-arm64.tar.gz.sha256
             dist/Parrot-*-Mac.zip
             dist/Parrot-*-Mac.zip.sha256
+          body: |
+            ## Install or update on a Mac
+
+            Open Terminal, paste this line, and press Return:
+
+            ```sh
+            curl -fsSL https://github.com/willmather95/parrot/releases/latest/download/install.sh | bash
+            ```
+
+            Parrot is not notarized by Apple, so macOS blocks the ZIP below when it comes from a browser. The installer checks the download and avoids that warning. Using the ZIP anyway? See [Downloaded the ZIP instead?](https://github.com/willmather95/parrot#downloaded-the-zip-instead).
           generate_release_notes: true
           fail_on_unmatched_files: true

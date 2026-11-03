@@ -64,17 +64,15 @@ Doctor checks initialization, not successful live dictation. See the [Windows gu
 
 ## macOS: install
 
-[Download Parrot 0.1.6 for Mac](https://github.com/willmather95/parrot/releases/download/v0.1.6/Parrot-0.1.6-Mac.zip)
-
-Already set up Parrot? Quit it from the bird menu, open the ZIP, replace Parrot in **Applications**, and open it again. Keep the same installation location.
-
-**First time using Parrot?** Use the installer below. It guides you through microphone and Accessibility permissions, downloads the speech model and sets up the shortcut. Opening the app ZIP alone does not complete this setup.
-
 Open Terminal, paste this entire line, and press Return:
 
 ```sh
 curl -fsSL https://github.com/willmather95/parrot/releases/latest/download/install.sh | bash
 ```
+
+Use the same line to update. It keeps your permissions and settings. If you installed with `--user`, end the line with `| bash -s -- --user` instead.
+
+Parrot is free, so it is not notarized by Apple. If you download the app from a browser, macOS says it "could not verify Parrot is free of malware" and won't open it. The installer avoids that warning. It checks that the download is complete and unchanged before it installs anything.
 
 The installer walks you through the two macOS permission prompts, downloads the local speech model, verifies your microphone, and starts Parrot automatically whenever you log in.
 
@@ -87,6 +85,17 @@ It also sets the Globe key to "Do Nothing" so macOS does not intercept Parrot's 
 **Requires:** macOS 14 or newer on an Apple Silicon Mac (M1 or newer). The first install downloads the on-device speech model and can take a few minutes.
 
 For a per-user installation without administrator access, the installer also supports `--user`. It installs into `~/Applications`. Keep one installation location.
+
+### Downloaded the ZIP instead?
+
+The Mac ZIP on the [latest release](https://github.com/willmather95/parrot/releases/latest) is for updating an existing setup. On its own it skips the permission, speech model and shortcut setup.
+
+1. Quit Parrot from the bird menu. Move the new Parrot into **Applications** and replace the old one.
+2. Open Parrot. When macOS shows the warning, click **Done**.
+3. Open **System Settings > Privacy & Security** and scroll down to **Security**.
+4. Next to the Parrot message, click **Open Anyway**. If macOS asks again, click **Open Anyway**, then enter your password.
+
+macOS asks once per download. The **Open Anyway** button shows for about an hour after you try to open the app.
 
 ## macOS: install with Codex or Claude Code
 
@@ -143,6 +152,8 @@ Codex desktop currently does not expose its composer as a focused Accessibility 
 Parrot will not start in a password or other secure field. If focus moves into one while Parrot is working, it discards that transcript instead of putting it on the clipboard.
 
 ## macOS: troubleshooting
+
+If macOS says Apple "could not verify Parrot is free of malware", run the installer line from [macOS: install](#macos-install), or follow the steps in [Downloaded the ZIP instead?](#downloaded-the-zip-instead).
 
 Run one check that verifies permissions, the real microphone path, and the selected local model:
 
