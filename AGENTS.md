@@ -18,7 +18,7 @@ Local voice-to-text. Press a shortcut, speak, get text. macOS (Apple Silicon, ma
 - Build: `swift build -c release`
 - Tests: `swift test --disable-automatic-resolution`
 - Installer checks: `bash -n scripts/install.sh`, `bash scripts/tests/test-install-paths.sh`
-- Model smoke: `parrot models smoke parakeet-tdt-0.6b-v2`
+- Model smoke (built binary only, never the installed CLI; as `release.yml` does, after the release build): `.build/arm64-apple-macosx/release/parrot models smoke parakeet-tdt-0.6b-v2`
 - UI preview (separate bundle ID `local.parrot.retro.preview`): `sh preview/build.sh`
 - Windows: `.\windows\Build.ps1`, `.\windows\Package.ps1` on Windows only
 
@@ -38,4 +38,4 @@ Tag `v*` triggers `release.yml` (build, test, model smoke, stage, publish). A re
 - In repo: `HANDOVER.md`, `docs/release-checklist.md`
 - Memory: `project-parrot-mac-download-gatekeeper-2026-11-03.md`, `gotcha-gh-active-account-cannot-push-willmather95-repos-2026-11-03.md`
 
-Verify in the running app: no verify-parrot skill yet. Parrot is not a web app. README smoke test (read-only health check on the installed app): `/Applications/Parrot.app/Contents/MacOS/parrot doctor --live-audio --model-ready`.
+Verify in the running app: no verify-parrot skill yet. Parrot is not a web app. README smoke test (read-only health check on the installed app): `/Applications/Parrot.app/Contents/MacOS/parrot doctor --live-audio --model-ready`. Note: `--live-audio` opens the microphone.
