@@ -11,4 +11,4 @@ preview/.build/ParrotRetroPreview.app/Contents/MacOS/ParrotRetroPreview --state 
 
 Accepted states: `ready`, `recording`, `transcribing`, `error`. Accepted sections: `overview`, `vocabulary`, `snippets`. Add `--save-failure` to make the in-memory save callback fail so the recovery state can be inspected. Omit `--screenshot` to keep the preview window open for keyboard and accessibility inspection. The build uses `swiftc -warnings-as-errors` with the system AppKit and SwiftUI frameworks; it does not resolve SwiftPM dependencies.
 
-Hallmark preview flags: `--empty`, `--draft`, `--minimum`, `--load-failure` and `--save-failure`. `--reduced-motion` disables view transaction animations for a static preview; it does not change the OS accessibility preference or prove actual OS Reduce Motion behavior.
+State preview flags: `--empty`, `--draft`, `--minimum`, `--load-failure` and `--save-failure`. `--reduced-motion` disables view transaction animations for a static preview; it does not change the OS accessibility preference or prove actual OS Reduce Motion behavior.

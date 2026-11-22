@@ -2,23 +2,22 @@
 
 ## Current proof boundary
 
-The installed macOS app and current public release are v0.1.4. The source
-candidate is v0.1.5, adding opt-in user installation and stronger speech smoke
-verification. Windows 0.2.0 is a separate preview with bundled CPU Parakeet inference.
-No public Windows package or notarized Mac release is implied by source changes.
+The current public Mac release is v0.1.6. Windows 0.2.0 is a separate preview
+with bundled CPU Parakeet inference. Source changes alone do not mean a public
+Windows package or a notarized Mac release exists.
 
 ## Candidate verification
 
-- Preserve the running Mac installation, local models, and stable
-  `com.digimata.parrot` identity while building.
+- While building, do not disturb an installed copy of Parrot, its local models,
+  or the stable `com.digimata.parrot` identity.
 - Run `swift test --disable-automatic-resolution` and a release build.
 - Run `parrot models smoke parakeet-tdt-0.6b-v2` from the candidate build. The
   generated phrase must match after case and punctuation normalization.
 - Run installer path tests and `bash -n scripts/install.sh`.
 - On a disposable Mac, test system installation, user installation, refusal of
   conflicting locations, upgrade failure/rollback, login startup, real dictation,
-  and retained permissions. Never exercise installer tests against Will's
-  daily-running app without explicit replacement authority.
+  and retained permissions. Never run installer tests on a Mac where
+  you use Parrot every day. They replace the installed app.
 - Windows CI builds the executable and checks state transitions, package hashes,
   install/update behavior, and refusal of corrupt downloads. It also decodes
   pinned public speech fixtures with the actual bundled model, measures word
@@ -26,7 +25,7 @@ No public Windows package or notarized Mac release is implied by source changes.
   regression evidence, not a broad accuracy benchmark or Mac parity proof.
 - On Windows with a standard account, run every runtime gate in windows/README.md.
   CI may run elevated; a green job is not proof of no-admin work-device acceptance.
-- Run Boris and an independent Fresh Eyes review on the final candidate.
+- Run an independent code review on the final candidate.
 
 ## Publisher identity
 
@@ -38,8 +37,9 @@ For a notarized Mac release, obtain a Developer ID Application identity, enable
 the required hardened runtime and justified entitlements, sign, submit through
 `notarytool`, staple the accepted ticket, and verify Gatekeeper acceptance on the
 downloaded artifact. Test TCC migration separately: changing signing requirements
-can affect existing Microphone/Accessibility approval. Do not silently replace
-the established identity in Will's installed app.
+can affect existing Microphone/Accessibility approval. Do not change the signing
+identity of existing installs without warning. macOS ties Microphone and
+Accessibility approval to it.
 
 For signed Windows distribution, obtain an Authenticode signing identity or an
 approved signing service, sign and timestamp the executable, and verify the
@@ -63,9 +63,9 @@ as a dependency. See [Sparkle documentation](https://sparkle-project.org/documen
 
 ## Publication
 
-Show changed files and commit intent, verify git author/email, obtain the user's
-commit/push/release approval, and run checks on the resulting revision. For
-Windows, attach the tested ZIP and checksum to an explicitly labeled prerelease.
-Do not make the Windows preview the latest stable Mac release. Read back the
-public release and its downloaded artifact after publishing. Record Windows
+Before publishing, review the changed files, check the git author and email, get
+maintainer approval, and run the checks on the exact revision you will release.
+For Windows, attach the tested ZIP and checksum to a release marked as a
+prerelease. Do not make the Windows preview the latest stable Mac release. After
+publishing, download the release and verify the artifact. Record Windows
 runtime acceptance separately from compilation and asset availability.

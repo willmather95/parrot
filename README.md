@@ -4,6 +4,8 @@
 
 Fast, private voice-to-text for Windows and Apple Silicon Macs. Press one shortcut, speak naturally, and get clean text ready to paste.
 
+**[Download Parrot](https://parrot-site-two.vercel.app)**, or go straight to [Windows](#windows-download-and-open) or [Mac](#macos-install).
+
 Audio and transcription stay on your computer. Parrot requires no transcription account, subscription, or cloud API. No GitHub account is needed to download either app.
 
 ## Parrot Studio
@@ -60,7 +62,7 @@ For a diagnostic, run this from the extracted app folder in PowerShell:
 .\Parrot.exe --doctor
 ```
 
-Doctor checks initialization, not successful live dictation. See the [Windows guide](https://github.com/willmather95/parrot/blob/codex/parrot-retro-candidate/windows/README.md) and [measured quality checks](https://github.com/willmather95/parrot/blob/codex/parrot-retro-candidate/docs/windows-transcription-quality.md) for details.
+Doctor checks initialization, not successful live dictation. See the [Windows guide](windows/README.md) and [measured quality checks](docs/windows-transcription-quality.md) for details.
 
 ## macOS: install
 
@@ -142,6 +144,10 @@ Codex desktop currently does not expose its composer as a focused Accessibility 
 
 Parrot will not start in a password or other secure field. If focus moves into one while Parrot is working, it discards that transcript instead of putting it on the clipboard.
 
+### Pause from the menu bar
+
+Parrot stays in the bird icon at the top of your screen, without a Dock icon. Open its menu and uncheck **Dictation** to pause the shortcut. If you are recording, Parrot stops the microphone and finishes that clip. Check **Dictation** again to resume, then use Control + Fn/Globe when you want to record. Closing Parrot Studio keeps dictation running.
+
 ## macOS: troubleshooting
 
 Run one check that verifies permissions, the real microphone path, and the selected local model:
@@ -205,14 +211,15 @@ See [docs/architecture.md](docs/architecture.md) for the macOS design and safety
 
 ### Windows
 
-Use the [Windows preview branch](https://github.com/willmather95/parrot/tree/codex/parrot-retro-candidate) on Windows. From the repository root in PowerShell:
+On Windows 11 x64, from the repository root in PowerShell:
 
 ```powershell
-.\windows\Build.ps1
 .\windows\Package.ps1
 ```
 
-The build downloads pinned, checksum-verified model/runtime dependencies. It uses the in-box .NET Framework compiler. The resulting ZIP includes the model and required libraries. See the [Windows guide](https://github.com/willmather95/parrot/blob/codex/parrot-retro-candidate/windows/README.md) for validation and hardware test limits.
+`Package.ps1` runs `Build.ps1` and its self-tests first.
+
+The build downloads pinned, checksum-verified model/runtime dependencies. It uses the in-box .NET Framework compiler. The resulting ZIP includes the model and required libraries. See the [Windows guide](windows/README.md) for validation and hardware test limits.
 
 ## How the macOS release is verified
 
@@ -223,7 +230,3 @@ This is an open-source beta. The release is ad hoc signed and is not Apple-notar
 ## License
 
 Parrot's source remains available under the original project's [MIT License](LICENSE). The Windows package also includes separately licensed model/runtime components and their license and attribution notices.
-
-### Pause from the menu bar
-
-Parrot stays in the bird icon at the top of your screen, without a Dock icon. Open its menu and uncheck **Dictation** to pause the shortcut. If you are recording, Parrot stops the microphone and finishes that clip. Check **Dictation** again to resume, then use Control + Fn/Globe when you want to record. Closing Parrot Studio keeps dictation running.
