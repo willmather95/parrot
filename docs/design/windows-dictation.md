@@ -4,11 +4,11 @@
 **Owner:** Parrot
 **Surface:** Windows desktop utility and notification-area icon
 **Updated:** 2026-09-16
-**Source context:** Mac toggle-dictation specification, Windows foundation prototype, user request for a work-laptop version without administrator access.
+**Source context:** Mac toggle-dictation specification, Windows foundation prototype, user request for a version that runs without administrator access.
 
 ## 1. Product Moment
 
-Will wants to dictate into work applications on Windows. The primary action is one shortcut to start and the same shortcut to stop. The costliest mistakes are unnoticed recording and delivery into a password field. Recording status and the stop instruction must be understandable immediately.
+A user wants to dictate into everyday apps on a Windows PC where they have no administrator rights. The primary action is one shortcut to start and the same shortcut to stop. The costliest mistakes are unnoticed recording and delivery into a password field. Recording status and the stop instruction must be understandable immediately.
 
 ## 2. Experience Thesis
 
@@ -67,15 +67,15 @@ No network call, media download, or model loading blocks the initial window. Spe
 
 ## 11. Content Truth and Microcopy
 
-Headline: “Parrot for Windows”. Primary action: “Start recording”. Label the local Parakeet backend and preview status. Do not imply measured work-laptop accuracy, managed-device approval, or verified microphone capture from initialization alone. Errors explain the smallest recovery action.
+Headline: “Parrot for Windows”. Primary action: “Start recording”. Label the local Parakeet backend and preview status. Do not imply measured accuracy on users' own hardware, IT approval, or verified microphone capture from initialization alone. Errors explain the smallest recovery action.
 
 ## 12. Implementation Boundaries
 
-Use in-box .NET Framework, Windows Forms, UI Automation, and pinned app-local sherpa-onnx with Parakeet TDT 0.6B v2 int8. Capture PCM audio in memory; load the model and decode off the UI thread. Source lives in windows/. Keep macOS app/runtime behavior unchanged. No service, driver, administrator manifest, execution-policy bypass, cloud transcription, transcript logging, or automatic startup registration. The user requested the local-model quality upgrade on September 16. Signing still requires separate credentials and authority.
+Use in-box .NET Framework, Windows Forms, UI Automation, and pinned app-local sherpa-onnx with Parakeet TDT 0.6B v2 int8. Capture PCM audio in memory; load the model and decode off the UI thread. Source lives in windows/. Keep macOS app/runtime behavior unchanged. No service, driver, administrator manifest, execution-policy bypass, cloud transcription, transcript logging, or automatic startup registration. Code signing is out of scope for this spec.
 
 ## 13. Assumptions and Open Decisions
 
-Windows 11 x64 is the first supported target. Target hardware is a Lenovo ThinkPad of unknown CPU/RAM. Use CPU inference without a GPU requirement. Real microphone accuracy and latency remain unknown until checked on that laptop. Employer application-control policy may reject unsigned executables even without elevation. The larger portable package carries its model and runtime so first use needs no download or language pack.
+Windows 11 x64 is the first supported target. Target hardware is a Lenovo ThinkPad of unknown CPU/RAM. Use CPU inference without a GPU requirement. Real microphone accuracy and latency remain unknown until checked on that laptop. Organization application-control policy may reject unsigned executables even without elevation. The larger portable package carries its model and runtime so first use needs no download or language pack.
 
 ## 14. Acceptance Criteria
 
@@ -87,10 +87,10 @@ Windows 11 x64 is the first supported target. Target hardware is a Lenovo ThinkP
 6. PASS if repeated recordings release resources and remain independent.
 7. PASS if keyboard, Narrator, touch, and 100/150/200% scaling preserve usable controls.
 8. PASS if a missing model/runtime or microphone permission produces an actionable error without downloading anything.
-9. PASS if the running macOS installation remains unchanged.
+9. PASS if the macOS app and its behavior are unchanged.
 10. PASS if pinned public speech fixtures meet the declared word-error thresholds and silence does not produce text. Report timings without treating CI hardware as the ThinkPad.
 11. PASS if long input is bounded and segmented, and cancellation prevents stale inference from copying text.
 
 ## 15. Verification Plan
 
-Run deterministic Windows state-machine tests, compilation, manifest inspection, package checksum validation, per-user install checks, and actual neural inference with public speech and non-speech fixtures in Windows CI. Real Windows verification covers microphone, editor paste, password/unknown focus, hotkey conflict, cancel, sleep/resume, unplugged microphone, DPI, Narrator, and quit. These remain unverified on a Mac. Boris and independently orchestrated Fresh Eyes review cover the final candidate. No web Lighthouse or mobile browser checks apply to a native desktop utility.
+Run deterministic Windows state-machine tests, compilation, manifest inspection, package checksum validation, per-user install checks, and actual neural inference with public speech and non-speech fixtures in Windows CI. Real Windows verification covers microphone, editor paste, password/unknown focus, hotkey conflict, cancel, sleep/resume, unplugged microphone, DPI, Narrator, and quit. These remain unverified on a Mac. Two independent code reviews cover the final candidate.

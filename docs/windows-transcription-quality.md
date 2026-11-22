@@ -19,7 +19,7 @@ The NVIDIA v2 model card reports a 6.05% average word error rate over its listed
 English benchmark sets. The v3 multilingual card reports 6.34% on its English
 benchmark table, so a higher version number alone is not a reason to change an
 English dictation default. These are publisher measurements of their evaluation
-pipeline, not results measured in this app or on Will's laptop.
+pipeline, not results measured in this app or on typical laptop hardware.
 
 The newer unified English model also merits future comparison: NVIDIA reports
 5.91% versus 6.04% for v2 in a shared evaluation. It uses an RNNT decoder and
@@ -42,9 +42,9 @@ rooms, or meeting audio. It does not establish a numerical improvement over
 the legacy engine because that engine has not been measured on the same host.
 
 Live microphone capture, permissions, cancellation, sleep/resume, and practical
-latency still require a standard-user Windows test. Quality acceptance for Will
-should include his actual work vocabulary and names. Never upload his work
-recordings for testing without explicit direction.
+latency still require a standard-user Windows test. Test with your own
+vocabulary and names. Never upload anyone's recordings for testing without
+their permission.
 
 Native inference is not forcibly interrupted in this in-process design. Cancel
 and the deadline invalidate delivery immediately and prevent subsequent chunks,
@@ -60,8 +60,8 @@ overlapping model operations. Process isolation is a possible later improvement.
 - [sherpa-onnx NeMo models](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/nemo-transducer-models.html)
 
 Exact artifact URLs, hashes, versions, and license notices are recorded in the
-Windows dependency manifest and bundled notices. The running Mac installation
-is outside the scope of this Windows backend change.
+Windows dependency manifest and bundled notices. This Windows backend
+change does not affect the Mac app.
 
 ## Verified candidate: September 16, 2026
 
@@ -91,6 +91,6 @@ dependency pins matched, its executable hash matches the measured executable,
 and its embedded manifest requests asInvoker with uiAccess=false. ZIP SHA-256:
 `cf3fdb8d818ef6f02bc373f339bd9140e46115d88bec3a36cc0517308bd5c1b3`.
 
-Independent Boris/Fresh Eyes review found no P0/P1. The documented native
-inference cancellation limitation remains P2. Real microphone and managed
+Independent code review found no blocking issues. The documented native
+inference cancellation limit is a known minor issue. Real microphone and managed
 standard-user acceptance remain unverified.

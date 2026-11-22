@@ -148,5 +148,4 @@ The click-through overlay remains bottom-center on the display under the pointer
 - **Network and failure scenarios:** Offline cached model; input-route change; zero-frame capture; event-tap recovery with forced clipboard fallback.
 - **Automated checks:** Release build, Swift tests for chord/toggle state, natural transcript boundaries, raw clipboard fallback, parse, plist, workflow YAML, and staged diff checks.
 - **Rendered QA evidence:** Persistent overlay, voice-reactive waveform, instant state swap, and reduced-motion behavior observed in the running signed app.
-- **Responsive QA loop:** N/A - macOS utility has no web viewport or mobile surface; multi-display positioning is the applicable adaptation.
-- **Final verifier:** Signed app doctor with live audio and model readiness, Parakeet smoke test, running LaunchAgent ready log, Boris, Fresh Eyes, and motion approval.
+- **Final verifier:** Signed app doctor with live audio and model readiness, Parakeet smoke test, running LaunchAgent ready log, independent code review, and a manual check of the waveform motion.
