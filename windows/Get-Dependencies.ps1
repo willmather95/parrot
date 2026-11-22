@@ -1,4 +1,5 @@
-# Download and verify the pinned local inference dependencies into windows/build.
+# Download or copy, and verify, the pinned local inference dependencies into windows/build.
+# A "vendored" artifact is copied from vendoredPath, relative to this windows/ folder.
 [CmdletBinding()]
 param()
 Set-StrictMode -Version Latest
@@ -160,7 +161,7 @@ foreach ($artifact in @($manifest.artifacts)) {
         Assert-RelativePath $relative
         if ($outputs.ContainsKey($relative.ToLowerInvariant())) { throw "Duplicate dependency output: $relative" }
         $outputs[$relative.ToLowerInvariant()] = $true
-        $vendoredPath = [string] $artifact.path
+        $vendoredPath = [string] $artifact.vendoredPath
         Assert-RelativePath $vendoredPath
         Copy-PinnedVendoredFile (Join-Path $PSScriptRoot ($vendoredPath.Replace('/', '\'))) (Join-Path $buildRoot ($relative.Replace('/', '\'))) ([long] $artifact.bytes) ([string] $artifact.sha256)
     } else {
@@ -179,7 +180,7 @@ Source: https://github.com/k2-fsa/sherpa-onnx/tree/dc5583f49917e4c95f6e7d862bb37
 ONNX Runtime 1.28.2
 Copyright Microsoft Corporation.
 Licensed under the MIT License. See licenses/LICENSE-onnxruntime.txt and licenses/NOTICE-onnxruntime-third-party.txt.
-Source: https://github.com/microsoft/onnxruntime/tree/v1.28.2
+Source: https://github.com/microsoft/onnxruntime/tree/v1.28.2 (unavailable since 2026-11-22; verified copies of both files are in windows/licenses/onnxruntime/ of the Parrot source)
 
 Parakeet TDT 0.6b v2 INT8 ONNX model
 Published by csukuangfj as a sherpa-onnx-compatible INT8 conversion of NVIDIA Parakeet TDT 0.6b v2.

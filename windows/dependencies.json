@@ -107,7 +107,7 @@
       "license": "MIT",
       "source": "https://github.com/microsoft/onnxruntime/tree/v1.28.2",
       "upstreamUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.28.2/LICENSE",
-      "path": "licenses/onnxruntime/LICENSE.txt",
+      "vendoredPath": "licenses/onnxruntime/LICENSE.txt",
       "outputPath": "licenses/LICENSE-onnxruntime.txt",
       "bytes": 1073,
       "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c"
@@ -119,7 +119,7 @@
       "license": "Multiple; see notice",
       "source": "https://github.com/microsoft/onnxruntime/tree/v1.28.2",
       "upstreamUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.28.2/ThirdPartyNotices.txt",
-      "path": "licenses/onnxruntime/ThirdPartyNotices.txt",
+      "vendoredPath": "licenses/onnxruntime/ThirdPartyNotices.txt",
       "outputPath": "licenses/NOTICE-onnxruntime-third-party.txt",
       "bytes": 325054,
       "sha256": "0e07b95f3a8d6230037707c5c4a2b554d12c4cb67369669ac255635528ffcee2"
