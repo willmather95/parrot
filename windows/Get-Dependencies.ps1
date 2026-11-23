@@ -114,7 +114,9 @@ function Copy-PinnedVendoredFile([string] $Source, [string] $Destination, [long]
     try {
         Assert-File $Source $Bytes $Sha256
     } catch {
-        throw "$($_.Exception.Message) This file is a copy committed to the Parrot source; line-ending conversion on checkout is the usual cause (see .gitattributes)."
+        # Only a wrong size or checksum on a file that exists points to line endings.
+        if (-not (Test-Path -LiteralPath $Source -PathType Leaf) -or $Sha256 -cnotmatch '^[a-f0-9]{64}$') { throw }
+        throw "$($_.Exception.Message) This file is a copy committed to the Parrot source, so the usual cause is line-ending conversion on checkout. Delete windows/licenses and run: git checkout -- windows/licenses"
     }
     if (Test-Path -LiteralPath $Destination -PathType Leaf) {
         try {
@@ -167,7 +169,7 @@ foreach ($artifact in @($manifest.artifacts)) {
         $outputs[$relative.ToLowerInvariant()] = $true
         $vendoredProperty = $artifact.PSObject.Properties['vendoredPath']
         if ($null -eq $vendoredProperty -or [string]::IsNullOrWhiteSpace([string] $vendoredProperty.Value)) {
-            throw "Vendored dependency $relative has no vendoredPath."
+            throw "Vendored dependency $relative has no vendoredPath in dependencies.json."
         }
         $vendoredPath = [string] $vendoredProperty.Value
         Assert-RelativePath $vendoredPath
@@ -189,7 +191,7 @@ ONNX Runtime 1.28.2
 Copyright Microsoft Corporation.
 Licensed under the MIT License. See licenses/LICENSE-onnxruntime.txt and licenses/NOTICE-onnxruntime-third-party.txt.
 Source: https://github.com/microsoft/onnxruntime/tree/v1.28.2
-Checksum-verified copies of both files are in windows/licenses/onnxruntime/ of the Parrot source: https://github.com/willmather95/parrot
+If that link is unreachable, checksum-verified copies of both files are at https://github.com/willmather95/parrot/tree/master/windows/licenses/onnxruntime
 
 Parakeet TDT 0.6b v2 INT8 ONNX model
 Published by csukuangfj as a sherpa-onnx-compatible INT8 conversion of NVIDIA Parakeet TDT 0.6b v2.

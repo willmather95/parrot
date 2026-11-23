@@ -60,7 +60,7 @@ overlapping model operations. Process isolation is a possible later improvement.
 - [sherpa-onnx NeMo models](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/nemo-transducer-models.html)
 
 Versions, hashes, and license notices for every artifact are recorded in the
-Windows dependency manifest and bundled notices. Downloaded artifacts list
+Windows dependency manifest (`windows/dependencies.json`) and bundled notices. Downloaded artifacts list
 their exact URL. The two ONNX Runtime license files list their upstream URL
 and the path of the copy kept in this repository, which the build uses
 instead. This Windows backend change does not affect the Mac app.
