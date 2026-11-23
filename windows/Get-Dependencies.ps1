@@ -110,13 +110,17 @@ function Copy-PinnedZipEntry(
     } finally { $zip.Dispose() }
 }
 
-function Copy-PinnedVendoredFile([string] $Source, [string] $Destination, [long] $Bytes, [string] $Sha256) {
+function Copy-PinnedVendoredFile([string] $Source, [string] $RepoPath, [string] $Destination, [long] $Bytes, [string] $Sha256) {
     try {
         Assert-File $Source $Bytes $Sha256
     } catch {
-        # Only a wrong size or checksum on a file that exists points to line endings.
+        # Only a wrong size or checksum on a file that exists gets the recovery hint.
         if (-not (Test-Path -LiteralPath $Source -PathType Leaf) -or $Sha256 -cnotmatch '^[a-f0-9]{64}$') { throw }
-        throw "$($_.Exception.Message) This file is a copy committed to the Parrot source, so the usual cause is line-ending conversion on checkout. Delete windows/licenses and run: git checkout -- windows/licenses"
+        throw ("$($_.Exception.Message) $RepoPath is a copy committed to the Parrot source and pinned in windows/dependencies.json. " +
+            "If you did not change it, restore that one file from the repository root with: git checkout HEAD -- $RepoPath " +
+            "(in a source download without a .git folder, download the file again from https://github.com/willmather95/parrot). " +
+            "If you are updating it, set its bytes and sha256 in windows/dependencies.json to match the new file. " +
+            "On an old clone, line-ending conversion can also cause this.")
     }
     if (Test-Path -LiteralPath $Destination -PathType Leaf) {
         try {
@@ -173,7 +177,7 @@ foreach ($artifact in @($manifest.artifacts)) {
         }
         $vendoredPath = [string] $vendoredProperty.Value
         Assert-RelativePath $vendoredPath
-        Copy-PinnedVendoredFile (Join-Path $PSScriptRoot ($vendoredPath.Replace('/', '\'))) (Join-Path $buildRoot ($relative.Replace('/', '\'))) ([long] $artifact.bytes) ([string] $artifact.sha256)
+        Copy-PinnedVendoredFile (Join-Path $PSScriptRoot ($vendoredPath.Replace('/', '\'))) ('windows/' + $vendoredPath) (Join-Path $buildRoot ($relative.Replace('/', '\'))) ([long] $artifact.bytes) ([string] $artifact.sha256)
     } else {
         throw "Unsupported dependency artifact type: $($artifact.type)"
     }
@@ -191,7 +195,7 @@ ONNX Runtime 1.28.2
 Copyright Microsoft Corporation.
 Licensed under the MIT License. See licenses/LICENSE-onnxruntime.txt and licenses/NOTICE-onnxruntime-third-party.txt.
 Source: https://github.com/microsoft/onnxruntime/tree/v1.28.2
-If that link is unreachable, checksum-verified copies of both files are at https://github.com/willmather95/parrot/tree/master/windows/licenses/onnxruntime
+If that link is unreachable, checksum-verified copies of both files are at https://github.com/willmather95/parrot/tree/5b6cb8a76c3ee983cd65c0ad2ddcec096826660a/windows/licenses/onnxruntime
 
 Parakeet TDT 0.6b v2 INT8 ONNX model
 Published by csukuangfj as a sherpa-onnx-compatible INT8 conversion of NVIDIA Parakeet TDT 0.6b v2.
