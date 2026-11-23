@@ -66,15 +66,15 @@ Doctor checks initialization, not successful live dictation. See the [Windows gu
 
 ## macOS: install
 
-Open Terminal, paste this entire line, and press Return:
+Open Terminal: press Command-Space, type Terminal, and press Return. Then paste this entire line and press Return:
 
 ```sh
 curl -fsSL https://github.com/willmather95/parrot/releases/latest/download/install.sh | bash
 ```
 
-Use the same line to update. Your settings and permissions carry over. If you installed with `--user`, end the line with `| bash -s -- --user` instead.
+To update, run the same line again. Your permissions and settings carry over, except that the installer sets the Globe key back to "Do Nothing" each time it runs (see below). If you used the per-user `--user` install described further down, end the line with `| bash -s -- --user` instead.
 
-Parrot is not notarized by Apple. If you download the app from a browser, macOS says Apple could not verify Parrot is free of malware, and it won't open the app. The installer avoids that warning. It checks that the download is complete and unchanged before it installs anything.
+Parrot is an open-source beta, and its Mac app is not notarized by Apple. If you download the app in a browser, macOS warns that it can't check Parrot for malware and won't open it. The Terminal line avoids that warning. Browsers mark downloaded files for that check, and a download made by curl in Terminal is not marked. If the file is marked anyway, the installer removes the mark, but only after the download's checksum, file paths and app signature all pass its checks. You can [read the installer](scripts/install.sh) before you run it.
 
 The installer walks you through the two macOS permission prompts, downloads the local speech model, verifies your microphone, and starts Parrot automatically whenever you log in.
 
@@ -90,12 +90,15 @@ For a per-user installation without administrator access, the installer also sup
 
 ### Downloaded the ZIP instead?
 
-The Mac ZIP on the [latest release](https://github.com/willmather95/parrot/releases/latest) only updates a Parrot you already set up with the installer. On its own it skips the permissions, the speech model and the shortcut.
+**Installing Parrot for the first time?** Use the Terminal line in [macOS: install](#macos-install) instead. The ZIP holds only the app. It does not ask for the Microphone and Accessibility permissions, download the speech model, or set up the shortcut.
 
-1. Quit Parrot from the bird menu. Move the new Parrot into the same **Applications** folder as before, replacing the old one.
-2. Open Parrot. When macOS shows the warning, close it.
-3. Open **System Settings > Privacy & Security** and scroll down to **Security**.
-4. Next to the message about Parrot, click **Open Anyway**. Confirm when macOS asks, and enter your password if it asks for one.
+The Mac ZIP on the [latest release](https://github.com/willmather95/parrot/releases/latest) is for updating a Parrot you already installed with the Terminal line:
+
+1. Quit Parrot from the bird menu.
+2. Double-click the ZIP to unzip it. Move the new Parrot into the same **Applications** folder as before, replacing the old one.
+3. Open Parrot. macOS shows a warning and won't open it. Close the warning with **Done**, **OK** or **Cancel**, whichever it shows. Do not click **Move to Trash**.
+4. Open **System Settings > Privacy & Security** and scroll down to **Security**.
+5. Next to the message about Parrot, click **Open Anyway**. When macOS asks again, click **Open Anyway** or **Open**, not **Move to Trash**. Enter an administrator name and password if macOS asks for them.
 
 You do this once for each new download. The **Open Anyway** button stays there for about an hour after you try to open the app.
 
@@ -159,7 +162,7 @@ Parrot stays in the bird icon at the top of your screen, without a Dock icon. Op
 
 ## macOS: troubleshooting
 
-If macOS says Apple could not verify Parrot is free of malware, run the installer line from [macOS: install](#macos-install), or follow the steps in [Downloaded the ZIP instead?](#downloaded-the-zip-instead).
+If macOS warns that it can't check Parrot for malware and won't open it, run the installer line from [macOS: install](#macos-install), or follow the steps in [Downloaded the ZIP instead?](#downloaded-the-zip-instead).
 
 Run one check that verifies permissions, the real microphone path, and the selected local model:
 
