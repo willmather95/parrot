@@ -72,7 +72,11 @@ Open Terminal: press Command-Space, type Terminal, and press Return. Then paste 
 curl -fsSL https://github.com/willmather95/parrot/releases/latest/download/install.sh | bash
 ```
 
-To update, run the same line again. Your permissions and settings carry over, except that the installer sets the Globe key back to "Do Nothing" each time it runs (see below). If you used the per-user `--user` install described further down, end the line with `| bash -s -- --user` instead.
+To update, run the same line again. Your permissions and settings carry over, except that the installer sets the Globe key back to "Do Nothing" each time it runs (see below). If you used the per-user `--user` install described further down, update with this line instead:
+
+```sh
+curl -fsSL https://github.com/willmather95/parrot/releases/latest/download/install.sh | bash -s -- --user
+```
 
 Parrot is an open-source beta, and its Mac app is not notarized by Apple. If you download the app in a browser, macOS warns that it can't check Parrot for malware and won't open it. The Terminal line avoids that warning. Browsers mark downloaded files for that check, and a download made by curl in Terminal is not marked. If the file is marked anyway, the installer removes the mark, but only after the download's checksum, file paths and app signature all pass its checks. You can [read the installer](scripts/install.sh) before you run it.
 
@@ -90,7 +94,7 @@ For a per-user installation without administrator access, the installer also sup
 
 ### Downloaded the ZIP instead?
 
-**Installing Parrot for the first time?** Use the Terminal line in [macOS: install](#macos-install) instead. The ZIP holds only the app. It does not ask for the Microphone and Accessibility permissions, download the speech model, or set up the shortcut.
+**Installing Parrot for the first time?** Use the Terminal line in [macOS: install](#macos-install) instead. The ZIP holds only the app. It skips the installer's setup step, which asks for Accessibility and Microphone access and sets the Globe key to "Do Nothing", and it does not set Parrot to start at login.
 
 The Mac ZIP on the [latest release](https://github.com/willmather95/parrot/releases/latest) is for updating a Parrot you already installed with the Terminal line:
 
@@ -98,7 +102,7 @@ The Mac ZIP on the [latest release](https://github.com/willmather95/parrot/relea
 2. Double-click the ZIP to unzip it. Move the new Parrot into the same **Applications** folder as before, replacing the old one.
 3. Open Parrot. macOS shows a warning and won't open it. Close the warning with **Done**, **OK** or **Cancel**, whichever it shows. Do not click **Move to Trash**.
 4. Open **System Settings > Privacy & Security** and scroll down to **Security**.
-5. Next to the message about Parrot, click **Open Anyway**. When macOS asks again, click **Open Anyway** or **Open**, not **Move to Trash**. Enter an administrator name and password if macOS asks for them.
+5. Next to the message about Parrot, click **Open Anyway**. When macOS asks again, click **Open Anyway** or **Open**, not **Move to Trash**. Enter your login password if macOS asks for it.
 
 You do this once for each new download. The **Open Anyway** button stays there for about an hour after you try to open the app.
 
