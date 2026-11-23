@@ -108,6 +108,7 @@
       "source": "https://github.com/microsoft/onnxruntime/tree/v1.28.2",
       "upstreamUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.28.2/LICENSE",
       "vendoredPath": "licenses/onnxruntime/LICENSE.txt",
+      "note": "Built from the committed copy at vendoredPath, not from upstreamUrl, because upstreamUrl stopped resolving. bytes and sha256 are the original pins, so the copy is the same file the build used to download.",
       "outputPath": "licenses/LICENSE-onnxruntime.txt",
       "bytes": 1073,
       "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c"
@@ -120,6 +121,7 @@
       "source": "https://github.com/microsoft/onnxruntime/tree/v1.28.2",
       "upstreamUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.28.2/ThirdPartyNotices.txt",
       "vendoredPath": "licenses/onnxruntime/ThirdPartyNotices.txt",
+      "note": "Built from the committed copy at vendoredPath, not from upstreamUrl, because upstreamUrl stopped resolving. bytes and sha256 are the original pins, so the copy is the same file the build used to download.",
       "outputPath": "licenses/NOTICE-onnxruntime-third-party.txt",
       "bytes": 325054,
       "sha256": "0e07b95f3a8d6230037707c5c4a2b554d12c4cb67369669ac255635528ffcee2"

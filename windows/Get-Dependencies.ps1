@@ -111,7 +111,11 @@ function Copy-PinnedZipEntry(
 }
 
 function Copy-PinnedVendoredFile([string] $Source, [string] $Destination, [long] $Bytes, [string] $Sha256) {
-    Assert-File $Source $Bytes $Sha256
+    try {
+        Assert-File $Source $Bytes $Sha256
+    } catch {
+        throw "$($_.Exception.Message) This file is a copy committed to the Parrot source; line-ending conversion on checkout is the usual cause (see .gitattributes)."
+    }
     if (Test-Path -LiteralPath $Destination -PathType Leaf) {
         try {
             Assert-File $Destination $Bytes $Sha256
@@ -161,7 +165,11 @@ foreach ($artifact in @($manifest.artifacts)) {
         Assert-RelativePath $relative
         if ($outputs.ContainsKey($relative.ToLowerInvariant())) { throw "Duplicate dependency output: $relative" }
         $outputs[$relative.ToLowerInvariant()] = $true
-        $vendoredPath = [string] $artifact.vendoredPath
+        $vendoredProperty = $artifact.PSObject.Properties['vendoredPath']
+        if ($null -eq $vendoredProperty -or [string]::IsNullOrWhiteSpace([string] $vendoredProperty.Value)) {
+            throw "Vendored dependency $relative has no vendoredPath."
+        }
+        $vendoredPath = [string] $vendoredProperty.Value
         Assert-RelativePath $vendoredPath
         Copy-PinnedVendoredFile (Join-Path $PSScriptRoot ($vendoredPath.Replace('/', '\'))) (Join-Path $buildRoot ($relative.Replace('/', '\'))) ([long] $artifact.bytes) ([string] $artifact.sha256)
     } else {
@@ -180,7 +188,8 @@ Source: https://github.com/k2-fsa/sherpa-onnx/tree/dc5583f49917e4c95f6e7d862bb37
 ONNX Runtime 1.28.2
 Copyright Microsoft Corporation.
 Licensed under the MIT License. See licenses/LICENSE-onnxruntime.txt and licenses/NOTICE-onnxruntime-third-party.txt.
-Source: https://github.com/microsoft/onnxruntime/tree/v1.28.2 (unavailable since 2026-11-22; verified copies of both files are in windows/licenses/onnxruntime/ of the Parrot source)
+Source: https://github.com/microsoft/onnxruntime/tree/v1.28.2
+Checksum-verified copies of both files are in windows/licenses/onnxruntime/ of the Parrot source: https://github.com/willmather95/parrot
 
 Parakeet TDT 0.6b v2 INT8 ONNX model
 Published by csukuangfj as a sherpa-onnx-compatible INT8 conversion of NVIDIA Parakeet TDT 0.6b v2.

@@ -59,9 +59,11 @@ overlapping model operations. Process isolation is a possible later improvement.
 - [NVIDIA unified English](https://huggingface.co/nvidia/parakeet-unified-en-0.6b)
 - [sherpa-onnx NeMo models](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/nemo-transducer-models.html)
 
-Exact artifact URLs, hashes, versions, and license notices are recorded in the
-Windows dependency manifest and bundled notices. This Windows backend
-change does not affect the Mac app.
+Versions, hashes, and license notices for every artifact are recorded in the
+Windows dependency manifest and bundled notices. Downloaded artifacts list
+their exact URL. The two ONNX Runtime license files list their upstream URL
+and the path of the copy kept in this repository, which the build uses
+instead. This Windows backend change does not affect the Mac app.
 
 ## Verified candidate: September 16, 2026
 
