@@ -1,6 +1,6 @@
 # Parrot
 
-<img src="AppBundle/ParrotAppIcon.png" width="112" height="112" alt="Parrot: an ivory and amber bird with a burnt-orange beak on charcoal">
+<img src="AppBundle/ParrotAppIcon.png" width="112" height="112" alt="Parrot: a cream parrot head on a dark green tile">
 
 Fast, private voice-to-text for Windows and Apple Silicon Macs. Press one shortcut, speak naturally, and get clean text ready to paste.
 
@@ -34,7 +34,7 @@ The package includes its local Parakeet speech model and CPU runtime. It needs n
 
 This is an **unsigned Windows preview**. Company application policies may still block it. Use your employer's approved software process if blocked. Real microphone quality and performance still need a check on your laptop.
 
-Closing the window keeps Parrot in the system tray beside the clock. Open Parrot again to bring the controls back. Choose **Quit** to stop it. The Windows preview uses the same charcoal, ivory and amber branding as the Mac Studio.
+Closing the window keeps Parrot in the system tray beside the clock. Open Parrot again to bring the controls back. Choose **Quit** to stop it. The Windows preview uses the same charcoal, ivory and amber interface as the Mac Studio, and the same bird icon as the Mac app.
 
 The **Releases / latest** installer installs the Mac version. Use the Windows download above for a PC.
 
