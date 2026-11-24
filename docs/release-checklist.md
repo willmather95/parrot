@@ -2,7 +2,7 @@
 
 ## Current proof boundary
 
-The current public Mac release is v0.1.6. Windows 0.2.0 is a separate preview
+The current public Mac release is v0.1.7. Windows 0.2.0 is a separate preview
 with bundled CPU Parakeet inference. Source changes alone do not mean a public
 Windows package or a notarized Mac release exists.
 

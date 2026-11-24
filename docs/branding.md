@@ -36,4 +36,4 @@ The website logo uses the same bird and colors on a 32 by 32 tile; its bird sits
 
 Native menu and Studio marks live in ParrotBrand in StudioView.swift, keeping the executable self-contained.
 
-Parrot 0.1.5 shipped this Studio interface with the earlier ivory and amber app icon; the bird icon ships in the next release. The isolated preview remains available for UI development.
+Parrot 0.1.5 shipped this Studio interface with the earlier ivory and amber app icon; the bird icon ships in 0.1.7. The isolated preview remains available for UI development.
